@@ -1,252 +1,339 @@
-// ====== CONFIGURAÇÃO ======
-const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec";
+(() => {
+    // Centralização do gabarito (ordem das respostas corretas)
+    const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
 
-// Global variables
-let currentQuestion = 1;
-let totalQuestions = 10;
-let questoes = [];
-let respostasInicial = [];
-let respostasFinal = [];
-let notaInicial = 0;
-let notaFinal = 0;
-let userName = "";
-let avaliacaoAtual = "inicial"; // 'inicial' ou 'final'
+    // ====== CONFIGURAÇÃO ======
+    const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec";
 
-// DOM elements
-const screens = document.querySelectorAll('.screen');
+    // Encapsular variáveis principais
+    let questoes = [];
+    let respostasInicial = [];
+    let respostasFinal = [];
+    let currentQuestion = 1;
+    let totalQuestions = 0;
+    let avaliacaoAtual = 'inicial';
+    let notaInicial = null;
+    let notaFinal = null;
+    let userName = "";
 
-// Load questions from questoes_soc.json
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Carregar o JSON externo
-        const response = await fetch('questoes_soc.json');
-        questoes = await response.json();
-        totalQuestions = questoes.length;
-        respostasInicial = Array(totalQuestions).fill(null);
-        respostasFinal = Array(totalQuestions).fill(null);
-        setupEventListeners();
-    } catch (error) {
-        console.error('Erro ao carregar as questões:', error);
-        alert('Erro ao carregar as questões. Por favor, tente novamente mais tarde.');
-    }
-});
+    // Defina screens no escopo do módulo
+    let screens = null;
 
-function setupEventListeners() {
-    // Module selection
-    document.querySelectorAll('.module-card').forEach(card => {
-        const moduleButton = card.querySelector('button');
-        moduleButton.addEventListener('click', function() {
-            const moduleType = card.getAttribute('data-module');
-            if (moduleType === 'seguranca') {
-                showScreen('seguranca-inicio');
+    // Função para mostrar uma tela e esconder as outras
+    function showScreen(screenId) {
+        if (!screens) {
+            screens = document.querySelectorAll('.screen');
+        }
+        screens.forEach(screen => {
+            if (screen.id === screenId) {
+                screen.classList.add('active');
             } else {
-                alert('Este módulo está em desenvolvimento e estará disponível em breve.');
+                screen.classList.remove('active');
             }
         });
-    });
+    }
 
-    document.querySelectorAll('.back-to-home').forEach(button => {
-        button.addEventListener('click', function() {
-            showScreen('home-screen');
-        });
-    });
-
-    document.getElementById('start-initial-btn').addEventListener('click', function() {
-        userName = document.getElementById('user-name').value.trim();
-        if (!userName) {
-            alert('Por favor, digite seu nome para continuar.');
-            return;
+    // Carregar questões do JSON
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('questoes_soc.json')
+            .then(res => res.json())
+            .then(data => {
+                questoes = data;
+                totalQuestions = questoes.length;
+                respostasInicial = Array(totalQuestions).fill(null);
+                respostasFinal = Array(totalQuestions).fill(null);
+                setupEventListeners();
+            })
+            .catch(() => alert("Erro ao carregar questões."));
+        // Recuperar progresso salvo, se houver
+        const progresso = localStorage.getItem('progressoAvaliacao');
+        if (progresso) {
+            const dadosProgresso = JSON.parse(progresso);
+            const confirmarRetomar = confirm("Você tem um progresso salvo. Deseja retomar a avaliação?");
+            if (confirmarRetomar) {
+                currentQuestion = dadosProgresso.currentQuestion;
+                respostasInicial = dadosProgresso.respostasInicial;
+                respostasFinal = dadosProgresso.respostasFinal;
+                avaliacaoAtual = dadosProgresso.avaliacaoAtual;
+                notaInicial = dadosProgresso.notaInicial;
+                notaFinal = dadosProgresso.notaFinal;
+                userName = dadosProgresso.userName;
+                if (avaliacaoAtual === 'inicial') {
+                    showScreen('avaliacao-screen');
+                    loadQuestion(currentQuestion);
+                    updateProgress();
+                } else {
+                    showScreen('resultado-final-screen');
+                    document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
+                    document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
+                    let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+                    document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
+                }
+            }
         }
-        avaliacaoAtual = 'inicial';
-        currentQuestion = 1;
-        respostasInicial = Array(totalQuestions).fill(null);
-        initializeAvaliacao('inicial');
+
+        screens = document.querySelectorAll('.screen');
     });
 
-    document.getElementById('prev-question').addEventListener('click', function() {
-        navigateQuestion(-1);
-    });
-
-    document.getElementById('next-question').addEventListener('click', function() {
-        navigateQuestion(1);
-    });
-
-    document.getElementById('finish-evaluation').addEventListener('click', function() {
-        finishEvaluation();
-    });
-
-    document.getElementById('continue-to-instructions').addEventListener('click', function() {
-        showScreen('instrucoes-screen');
-        document.getElementById('initial-score-display').textContent = notaInicial;
-    });
-
-    document.getElementById('start-final-btn').addEventListener('click', function() {
-        avaliacaoAtual = 'final';
-        currentQuestion = 1;
-        respostasFinal = Array(totalQuestions).fill(null);
-        initializeAvaliacao('final');
-    });
-
-    document.getElementById('new-evaluation-btn').addEventListener('click', function() {
-        resetApplication();
-        showScreen('seguranca-inicio');
-    });
-}
-
-function showScreen(screenId) {
-    screens.forEach(screen => {
-        screen.classList.remove('active');
-    });
-    document.getElementById(screenId).classList.add('active');
-}
-
-function initializeAvaliacao(type) {
-    document.getElementById('avaliacao-title').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
-    document.getElementById('breadcrumb-avaliacao').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
-    currentQuestion = 1;
-    loadQuestion(currentQuestion);
-    updateProgress();
-    showScreen('avaliacao-screen');
-}
-
-function loadQuestion(num) {
-    const questao = questoes[num - 1];
-    const alternativasContainer = document.getElementById('alternativas-container');
-    document.getElementById('questao-numero').textContent = num;
-    document.getElementById('questao-texto').textContent = questao.pergunta;
-    alternativasContainer.innerHTML = '';
-    questao.alternativas.forEach((alternativa, index) => {
-        const letter = String.fromCharCode(65 + index); // A, B, C, D...
-        const isSelected = avaliacaoAtual === 'inicial'
-            ? respostasInicial[num - 1] === letter
-            : respostasFinal[num - 1] === letter;
-        const alternativaEl = document.createElement('div');
-        alternativaEl.className = `alternativa${isSelected ? ' selected' : ''}`;
-        alternativaEl.innerHTML = `
-            <input type="radio" id="alt-${letter}" name="question${num}" value="${letter}" ${isSelected ? 'checked' : ''}>
-            <label for="alt-${letter}" class="alternativa-text">${alternativa}</label>
-        `;
-        alternativaEl.addEventListener('click', function() {
-            document.querySelectorAll('.alternativa').forEach(alt => {
-                alt.classList.remove('selected');
+    function setupEventListeners() {
+        // Module selection
+        document.querySelectorAll('.module-card').forEach(card => {
+            const moduleButton = card.querySelector('button');
+            moduleButton.addEventListener('click', function() {
+                const moduleType = card.getAttribute('data-module');
+                if (moduleType === 'seguranca') {
+                    showScreen('seguranca-inicio');
+                } else {
+                    alert('Este módulo está em desenvolvimento e estará disponível em breve.');
+                }
             });
-            this.classList.add('selected');
-            this.querySelector('input').checked = true;
-            if (avaliacaoAtual === 'inicial') {
-                respostasInicial[num - 1] = letter;
-            } else {
-                respostasFinal[num - 1] = letter;
-            }
-            updateNavigationButtons();
         });
-        alternativasContainer.appendChild(alternativaEl);
-    });
-    updateNavigationButtons();
-}
 
-function updateProgress() {
-    const progressFill = document.getElementById('progress-fill');
-    const progressText = document.getElementById('progress-text');
-    const progress = (currentQuestion / totalQuestions) * 100;
-    progressFill.style.width = `${progress}%`;
-    progressText.textContent = `Questão ${currentQuestion} de ${totalQuestions}`;
-}
+        document.querySelectorAll('.back-to-home').forEach(button => {
+            button.addEventListener('click', function() {
+                showScreen('home-screen');
+            });
+        });
 
-function navigateQuestion(direction) {
-    const newQuestion = currentQuestion + direction;
-    if (newQuestion < 1 || newQuestion > totalQuestions) {
-        return;
+        document.getElementById('start-initial-btn').addEventListener('click', function() {
+            userName = document.getElementById('user-name').value.trim();
+            if (!userName) {
+                alert('Por favor, digite seu nome para continuar.');
+                return;
+            }
+            avaliacaoAtual = 'inicial';
+            currentQuestion = 1;
+            respostasInicial = Array(totalQuestions).fill(null);
+            initializeAvaliacao('inicial');
+        });
+
+        document.getElementById('prev-question').addEventListener('click', function() {
+            navigateQuestion(-1);
+        });
+
+        document.getElementById('next-question').addEventListener('click', function() {
+            navigateQuestion(1);
+        });
+
+        document.getElementById('finish-evaluation').addEventListener('click', function() {
+            finishEvaluation();
+        });
+
+        document.getElementById('continue-to-instructions').addEventListener('click', function() {
+            showScreen('instrucoes-screen');
+            document.getElementById('initial-score-display').textContent = notaInicial;
+        });
+
+        document.getElementById('start-final-btn').addEventListener('click', function() {
+            avaliacaoAtual = 'final';
+            currentQuestion = 1;
+            respostasFinal = Array(totalQuestions).fill(null);
+            initializeAvaliacao('final');
+        });
+
+        document.getElementById('new-evaluation-btn').addEventListener('click', function() {
+            resetApplication();
+            showScreen('seguranca-inicio');
+        });
     }
-    currentQuestion = newQuestion;
-    loadQuestion(currentQuestion);
-    updateProgress();
-}
 
-function updateNavigationButtons() {
-    const prevButton = document.getElementById('prev-question');
-    const nextButton = document.getElementById('next-question');
-    const finishButton = document.getElementById('finish-evaluation');
-    prevButton.style.visibility = currentQuestion > 1 ? 'visible' : 'hidden';
-    if (currentQuestion < totalQuestions) {
-        nextButton.classList.remove('hidden');
-        finishButton.classList.add('hidden');
-    } else {
-        nextButton.classList.add('hidden');
-        finishButton.classList.remove('hidden');
-    }
-    const respostas = avaliacaoAtual === 'inicial' ? respostasInicial : respostasFinal;
-    const allAnswered = respostas.every((resp, index) => index >= totalQuestions || resp !== null);
-    finishButton.disabled = !allAnswered;
-}
-
-function calculateScore(respostas) {
-    let score = 0;
-    questoes.forEach((questao, index) => {
-        if (respostas[index] === questao.respostaCerta) {
-            score++;
-        }
-    });
-    return score;
-}
-
-function finishEvaluation() {
-    const respostas = avaliacaoAtual === 'inicial' ? respostasInicial : respostasFinal;
-    const unansweredQuestions = respostas.findIndex((resp, index) => index < totalQuestions && resp === null);
-    if (unansweredQuestions !== -1) {
-        alert(`Por favor, responda a questão ${unansweredQuestions + 1} antes de finalizar.`);
-        currentQuestion = unansweredQuestions + 1;
+    function initializeAvaliacao(type) {
+        document.getElementById('avaliacao-title').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
+        document.getElementById('breadcrumb-avaliacao').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
+        currentQuestion = 1;
         loadQuestion(currentQuestion);
         updateProgress();
-        return;
+        showScreen('avaliacao-screen');
     }
-    if (avaliacaoAtual === 'inicial') {
-        notaInicial = calculateScore(respostasInicial);
-        showScreen('resultado-screen');
-        document.getElementById('score-value').textContent = notaInicial;
-        document.getElementById('score-percentage').textContent = `${Math.round((notaInicial / totalQuestions) * 100)}%`;
-    } else {
-        notaFinal = calculateScore(respostasFinal);
-        showScreen('resultado-final-screen');
-        document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
-        document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
-        let eficacia = 0;
-        if (notaInicial < totalQuestions) {
-            eficacia = ((notaFinal - notaInicial) / (totalQuestions - notaInicial)) * 100;
-        }
-        eficacia = Math.max(0, Math.round(eficacia));
-        document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
-        // Chamar função para enviar para a planilha
-        enviarResultadoParaPlanilha({
-            nome: userName,
-            notaInicial: notaInicial,
-            notaFinal: notaFinal,
-            eficacia: eficacia,
-            respostasInicial: respostasInicial.join(','),
-            respostasFinal: respostasFinal.join(',')
+
+    function loadQuestion(num) {
+        const questao = questoes[num - 1];
+        const alternativasContainer = document.getElementById('alternativas-container');
+        document.getElementById('questao-numero').textContent = num;
+        document.getElementById('questao-texto').textContent = questao.pergunta;
+        alternativasContainer.innerHTML = '';
+        questao.alternativas.forEach((alternativa, index) => {
+            const letter = String.fromCharCode(65 + index); // A, B, C, D...
+            const isSelected = avaliacaoAtual === 'inicial'
+                ? respostasInicial[num - 1] === letter
+                : respostasFinal[num - 1] === letter;
+            const alternativaEl = document.createElement('div');
+            alternativaEl.className = `alternativa${isSelected ? ' selected' : ''}`;
+            alternativaEl.innerHTML = `
+                <input type="radio" id="alt-${letter}" name="question${num}" value="${letter}" ${isSelected ? 'checked' : ''}>
+                <label for="alt-${letter}" class="alternativa-text">${alternativa}</label>
+            `;
+            alternativaEl.addEventListener('click', function() {
+                document.querySelectorAll('.alternativa').forEach(alt => {
+                    alt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+                if (avaliacaoAtual === 'inicial') {
+                    respostasInicial[num - 1] = letter;
+                } else {
+                    respostasFinal[num - 1] = letter;
+                }
+                updateNavigationButtons();
+                salvarProgresso();
+            });
+            alternativasContainer.appendChild(alternativaEl);
         });
+        updateNavigationButtons();
     }
-}
 
-function enviarResultadoParaPlanilha(dados) {
-    fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dados)
-    }).then(response => {
-        // Sucesso: opcional, mostrar confirmação
-    }).catch(error => {
-        alert('Erro ao salvar resultado na planilha.');
+    // Cálculo da nota usando gabarito centralizado
+    function calculateScore(respostas) {
+        let score = 0;
+        for (let i = 0; i < totalQuestions; i++) {
+            if (respostas[i] === gabarito[i]) score++;
+        }
+        return score;
+    }
+
+    // Cálculo da eficácia (permitir negativo ou não)
+    function calcularEficacia(notaInicial, notaFinal, total) {
+        if (notaInicial === null || notaFinal === null) return 0;
+        let eficacia = ((notaFinal - notaInicial) / (total - notaInicial)) * 100;
+        // Se quiser permitir negativo, remova o Math.max
+        return Math.max(0, Math.round(eficacia));
+    }
+
+    function updateProgress() {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const progress = (currentQuestion / totalQuestions) * 100;
+        progressFill.style.width = `${progress}%`;
+        progressText.textContent = `Questão ${currentQuestion} de ${totalQuestions}`;
+    }
+
+    function navigateQuestion(direction) {
+        const newQuestion = currentQuestion + direction;
+        if (newQuestion < 1 || newQuestion > totalQuestions) {
+            return;
+        }
+        currentQuestion = newQuestion;
+        loadQuestion(currentQuestion);
+        updateProgress();
+    }
+
+    // Persistência temporária no localStorage
+    function salvarProgresso() {
+        localStorage.setItem('progressoAvaliacao', JSON.stringify({
+            currentQuestion,
+            respostasInicial,
+            respostasFinal,
+            avaliacaoAtual,
+            notaInicial,
+            notaFinal,
+            userName
+        }));
+    }
+
+    function updateNavigationButtons() {
+        const prevButton = document.getElementById('prev-question');
+        const nextButton = document.getElementById('next-question');
+        const finishButton = document.getElementById('finish-evaluation');
+        prevButton.style.visibility = currentQuestion > 1 ? 'visible' : 'hidden';
+        if (currentQuestion < totalQuestions) {
+            nextButton.classList.remove('hidden');
+            finishButton.classList.add('hidden');
+            const respostas = (avaliacaoAtual === 'inicial') ? respostasInicial : respostasFinal;
+            nextButton.disabled = !respostas[currentQuestion - 1];
+        } else {
+            nextButton.classList.add('hidden');
+            finishButton.classList.remove('hidden');
+        }
+        const respostas = avaliacaoAtual === 'inicial' ? respostasInicial : respostasFinal;
+        const allAnswered = respostas.every((resp, index) => index >= totalQuestions || resp !== null);
+        finishButton.disabled = !allAnswered;
+    }
+
+    // Aviso antes de sair
+    window.addEventListener('beforeunload', function(e) {
+        if (currentQuestion > 0 && currentQuestion <= totalQuestions) {
+            e.preventDefault();
+            e.returnValue = "Tem certeza que deseja sair? O progresso da avaliação será perdido.";
+        }
     });
-}
 
-function resetApplication() {
-    currentQuestion = 1;
-    respostasInicial = Array(totalQuestions).fill(null);
-    respostasFinal = Array(totalQuestions).fill(null);
-    notaInicial = 0;
-    notaFinal = 0;
-    userName = "";
-    avaliacaoAtual = "inicial";
-}
+    function finishEvaluation() {
+        const respostas = avaliacaoAtual === 'inicial' ? respostasInicial : respostasFinal;
+        const unansweredQuestions = respostas.findIndex((resp, index) => index < totalQuestions && resp === null);
+        if (unansweredQuestions !== -1) {
+            alert(`Por favor, responda a questão ${unansweredQuestions + 1} antes de finalizar.`);
+            currentQuestion = unansweredQuestions + 1;
+            loadQuestion(currentQuestion);
+            updateProgress();
+            return;
+        }
+        if (avaliacaoAtual === 'inicial') {
+            notaInicial = calculateScore(respostasInicial);
+            showScreen('resultado-screen');
+            document.getElementById('score-value').textContent = notaInicial;
+            document.getElementById('score-percentage').textContent = `${Math.round((notaInicial / totalQuestions) * 100)}%`;
+        } else {
+            notaFinal = calculateScore(respostasFinal);
+            showScreen('resultado-final-screen');
+            document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
+            document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
+            let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+            document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
+            // Chamar função para enviar para a planilha
+            enviarResultadoParaPlanilha({
+                nome: userName,
+                notaInicial: notaInicial,
+                notaFinal: notaFinal,
+                eficacia: eficacia,
+                respostasInicial: respostasInicial.join(','),
+                respostasFinal: respostasFinal.join(',')
+            });
+            Object.freeze(respostasInicial);
+            Object.freeze(respostasFinal);
+        }
+    }
+
+    // Envio dos dados finais via webhook (com validação e confirmação)
+    function enviarResultadoParaPlanilha(dados) {
+        if (!dados.nome || dados.notaInicial === null || dados.notaFinal === null) {
+            alert("Dados incompletos. O resultado não será enviado.");
+            return;
+        }
+        fetch(WEBHOOK_URL, {
+            method: 'POST',
+            body: JSON.stringify(dados),
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Exibir confirmação na tela de resultado
+                document.getElementById('mensagem-envio').textContent = "Resultados salvos com sucesso!";
+            } else {
+                alert("Falha ao enviar resultados.");
+            }
+        })
+        .catch(() => alert("Erro ao enviar resultados."));
+    }
+
+    // Resetar aplicação e limpar campo de nome
+    function resetApplication() {
+        currentQuestion = 1;
+        respostasInicial = Array(totalQuestions).fill(null);
+        respostasFinal = Array(totalQuestions).fill(null);
+        notaInicial = 0;
+        notaFinal = 0;
+        userName = "";
+        avaliacaoAtual = "inicial";
+        document.getElementById('user-name').value = "";
+        localStorage.removeItem('progressoAvaliacao');
+    }
+
+    // (Opcional) Detectar DevTools aberto
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            alert("Modo desenvolvedor ativado. Jogue limpo!");
+        }
+    });
+
+    // ...restante do código...
+})();
