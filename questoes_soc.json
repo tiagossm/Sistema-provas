@@ -7,7 +7,8 @@
       "B) Tipos: Químicos, Acidentes, Inespecíficos; a vinculação é feita no cadastro de \"Grupos de Exposição Homogênea (GHE)\".",
       "C) Tipos: Físicos, Químicos, Biológicos, Ergonômicos, Acidentes e Inespecíficos; a vinculação para agentes nocivos e atividades eSocial é configurada através da funcionalidade \"Cadastro eSocial - Tabela 24\" no cadastro do Risco.",
       "D) Tipos: Apenas Físicos e Químicos; a vinculação é realizada diretamente na \"Ficha Clínica\" do funcionário."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 2,
@@ -17,7 +18,8 @@
       "B) São utilizados para determinar a periodicidade da medição do risco, e sua ausência apenas gera um aviso informativo.",
       "C) Definem os valores máximos permitidos e os níveis de alerta para o risco, respectivamente; são cruciais para que a periodicidade do exame se baseie na medição e para que o limite selecionado seja visualizado nos quadros de riscos do PPRA e LTCAT.",
       "D) Indicam a intensidade do risco para fins de cálculo de periculosidade, sendo ignorados se o risco for qualitativo."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 3,
@@ -27,7 +29,8 @@
       "B) O GHE é cadastrado apenas com um nome e responsável; a vinculação de riscos e exames é realizada em módulos separados, sem conexão direta com o GHE.",
       "C) Um GHE é cadastrado com nome, responsável, descrição e a opção \"GHE exclusivo para trabalhadores avulsos\"; é fundamental vincular riscos e exames a ele para que sejam contemplados no PCMSO e ASOs criados através da Gestão de Convocação.",
       "D) O processo de cadastro é exclusivo para trabalhadores temporários, e a importância da vinculação se limita ao controle de estoque de EPIs."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 4,
@@ -37,7 +40,8 @@
       "B) A caracterização é visualmente sinalizada por cores (verde para caracterizado, vazio para não caracterizado), e as datas de início e fim da exposição ao risco são incluídas através do ícone \"Incluir Validade da Característica\".",
       "C) O status da caracterização é exibido apenas por texto no relatório; as datas de exposição são adicionadas em uma tela separada de histórico de riscos.",
       "D) Não há representação visual específica para a caracterização de riscos em GHEs; as datas são preenchidas manualmente no campo de observações."
-    ]
+    ],
+    "resposta": "B"
   },
   {
     "numero": 5,
@@ -47,7 +51,8 @@
       "B) O gerenciamento ocorre pela \"Gestão Externa\", e as informações essenciais para a emissão de certificados são apenas o nome do curso e a carga horária.",
       "C) O gerenciamento de turmas (Gestão SOC) inclui o preenchimento de campos obrigatórios como Nome, Período (início e fim), Hora 1º momento, Duração, Instrutor(es), Modalidade, Tipo de treinamento, Cursos e Funcionários; o sistema permite imprimir \"Certificado\" e \"Certificado Coletivo\" para essas turmas.",
       "D) O SOC apenas registra o histórico dos treinamentos realizados, sem a funcionalidade de gerenciamento de turmas ou a emissão de certificados padronizados."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 6,
@@ -57,7 +62,8 @@
       "B) O cadastro de EPI exige que o CA seja digitado manualmente; o sistema apenas verifica se o campo CA não está vazio.",
       "C) O cadastro de um EPI pode ser realizado com base no CA, permitindo a busca por este código; o SOC realiza validações como a verificação de informações do CA e, caso o controle de estoque por saldo seja obrigatório, exibirá o EPI na cor vermelha se não houver quantidade disponível para entrega, impedindo seu uso.",
       "D) O EPI é cadastrado sem o CA no sistema principal; a validação do CA é feita apenas por meio de importação de planilhas."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 7,
@@ -67,7 +73,8 @@
       "B) Apenas a \"Classificação de Riscos\" e \"Recomendações\" são seções, sem relação direta com a NR-16.",
       "C) As principais informações e seções para a emissão do Laudo de Periculosidade incluem dados da unidade, caracterização de periculosidade (com EPIs, EPCs, perigos/fatores de risco e parecer técnico), síntese das hierarquias e assinaturas dos responsáveis, auxiliando na conformidade com a NR-16 ao permitir o detalhamento das condições e indicação da periculosidade.",
       "D) O sistema gera o laudo de periculosidade de forma simplificada, focando apenas no nome do funcionário e no risco sem seções detalhadas, e a NR-16 é um critério externo."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 8,
@@ -77,7 +84,8 @@
       "B) Os tipos de riscos contemplados por padrão são Físicos, Químicos e Biológicos; as informações da característica dos riscos são exibidas com detalhes como descrição, possíveis lesões e fontes geradoras; a coluna \"Insalubridade\" indica o grau de insalubridade (Mínimo, Médio ou Máximo) ou \"Não informado\".",
       "C) Todos os tipos de riscos são contemplados; são exibidas apenas as fontes geradoras; a coluna \"Insalubridade\" indica se o risco é quantitativo ou qualitativo.",
       "D) Apenas riscos químicos e inespecíficos são contemplados; as informações são exibidas de forma resumida; a coluna \"Insalubridade\" indica o número de funcionários expostos."
-    ]
+    ],
+    "resposta": "B"
   },
   {
     "numero": 9,
@@ -87,7 +95,8 @@
       "B) O módulo GRO é utilizado para o agendamento de consultas médicas, e o Inventário de Riscos e Plano de Ação são relatórios de presença.",
       "C) O GRO visa o gerenciamento de riscos ocupacionais, conforme a NR-1, integrando o Inventário de Riscos (que exibe os perigos/fatores de risco aplicados e caracterizados) e o Plano de Ação (para definição de medidas de controle e melhorias), permitindo a avaliação e classificação dos riscos.",
       "D) O GRO é um módulo de treinamentos obrigatórios, e sua integração com Inventário de Riscos e Plano de Ação serve apenas para emitir certificados de participação."
-    ]
+    ],
+    "resposta": "C"
   },
   {
     "numero": 10,
@@ -97,6 +106,7 @@
       "B) A SIA pode gerar relatórios de absenteísmo e controlar a validade de EPIs, mas não interage com a caracterização de riscos.",
       "C) A SIA pode auxiliar na avaliação de riscos ao permitir o upload de imagens do ambiente de trabalho para sugerir perigos/fatores de risco, e também na caracterização do risco, sugerindo informações detalhadas a serem inseridas na característica do risco após análise da aplicação.",
       "D) A SIA automatiza todo o processo de gestão de segurança do trabalho, eliminando a necessidade de intervenção humana na caracterização e identificação de riscos."
-    ]
+    ],
+    "resposta": "C"
   }
 ]

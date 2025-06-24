@@ -1,6 +1,4 @@
 (() => {
-    // Centralização do gabarito (ordem das respostas corretas)
-    const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
 
     // Encapsular variáveis principais
     let questoes = [];
@@ -192,7 +190,7 @@
     function calculateScore(respostas) {
         let score = 0;
         for (let i = 0; i < totalQuestions; i++) {
-            if (respostas[i] === gabarito[i]) score++;
+            if (respostas[i] === questoes[i].resposta) score++;
         }
         return score;
     }
