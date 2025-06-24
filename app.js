@@ -1,4 +1,32 @@
 (() => {
+    const modulesConfig = [
+        {
+            key: 'seguranca',
+            name: 'Módulo 1 - Segurança do Trabalho',
+            description: 'Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)',
+            jsonPath: 'questoes_soc.json',
+            icon: '🛡️',
+            active: true
+        },
+        {
+            key: 'saude',
+            name: 'Módulo 2 - Saúde Ocupacional',
+            description: 'Avaliação de programas de saúde ocupacional e medicina do trabalho',
+            jsonPath: 'questoes_saude.json',
+            icon: '🏥',
+            active: false
+        },
+        {
+            key: 'financeiro',
+            name: 'Módulo 3 - Financeiro',
+            description: 'Gestão financeira e análise de custos em segurança do trabalho',
+            jsonPath: 'questoes_financeiro.json',
+            icon: '💰',
+            active: false
+        }
+    ];
+
+    let currentModule = null;
     // Centralização do gabarito (ordem das respostas corretas)
     const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
 
@@ -32,41 +60,87 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('questoes_soc.json')
+    function buildModulesGrid() {
+        const grid = document.getElementById('modules-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        modulesConfig.forEach(mod => {
+            const card = document.createElement('div');
+            card.className = `module-card ${mod.active ? 'active' : 'disabled'}`;
+            card.dataset.module = mod.key;
+            card.innerHTML = `
+                <div class="module-icon">${mod.icon}</div>
+                <h3>${mod.name}</h3>
+                <p>${mod.description}</p>
+                <div class="module-status ${mod.active ? 'active' : 'development'}">${mod.active ? 'Ativo' : 'Em Desenvolvimento'}</div>
+                <button class="btn ${mod.active ? 'btn--primary' : 'btn--secondary'}" ${mod.active ? '' : 'disabled'}>${mod.active ? 'Iniciar Avaliação' : 'Em Breve'}</button>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function fetchModuleQuestions(mod) {
+        return fetch(mod.jsonPath)
             .then(res => res.json())
             .then(data => {
                 questoes = data;
                 totalQuestions = questoes.length;
                 respostasInicial = Array(totalQuestions).fill(null);
                 respostasFinal = Array(totalQuestions).fill(null);
-                setupEventListeners();
             })
-            .catch(() => alert("Erro ao carregar questões."));
+            .catch(() => alert('Erro ao carregar questões.'));
+    }
+
+    function updateModuleTexts(mod) {
+        document.getElementById('breadcrumb-module-name').textContent = mod.name;
+        document.querySelectorAll('.breadcrumb-module').forEach(el => el.textContent = mod.name);
+        const title = document.getElementById('module-title');
+        const desc = document.getElementById('module-description');
+        if (title) title.textContent = mod.name;
+        if (desc) desc.textContent = mod.description;
+    }
+
+    function loadModule(mod) {
+        currentModule = mod;
+        fetchModuleQuestions(mod).then(() => {
+            updateModuleTexts(mod);
+            showScreen('module-intro-screen');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        buildModulesGrid();
+        setupEventListeners();
 
         const progresso = localStorage.getItem('progressoAvaliacao');
         if (progresso) {
             const dadosProgresso = JSON.parse(progresso);
-            const confirmarRetomar = confirm("Você tem um progresso salvo. Deseja retomar a avaliação?");
-            if (confirmarRetomar) {
-                currentQuestion = dadosProgresso.currentQuestion;
-                respostasInicial = dadosProgresso.respostasInicial;
-                respostasFinal = dadosProgresso.respostasFinal;
-                avaliacaoAtual = dadosProgresso.avaliacaoAtual;
-                notaInicial = dadosProgresso.notaInicial;
-                notaFinal = dadosProgresso.notaFinal;
-                userName = dadosProgresso.userName;
-                if (avaliacaoAtual === 'inicial') {
-                    showScreen('avaliacao-screen');
-                    loadQuestion(currentQuestion);
-                    updateProgress();
-                } else {
-                    showScreen('resultado-final-screen');
-                    document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
-                    document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
-                    let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
-                    document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
-                }
+            currentModule = modulesConfig.find(m => m.key === dadosProgresso.moduleKey) || null;
+            if (currentModule) {
+                fetchModuleQuestions(currentModule).then(() => {
+                    const confirmarRetomar = confirm("Você tem um progresso salvo. Deseja retomar a avaliação?");
+                    if (confirmarRetomar) {
+                        currentQuestion = dadosProgresso.currentQuestion;
+                        respostasInicial = dadosProgresso.respostasInicial;
+                        respostasFinal = dadosProgresso.respostasFinal;
+                        avaliacaoAtual = dadosProgresso.avaliacaoAtual;
+                        notaInicial = dadosProgresso.notaInicial;
+                        notaFinal = dadosProgresso.notaFinal;
+                        userName = dadosProgresso.userName;
+                        updateModuleTexts(currentModule);
+                        if (avaliacaoAtual === 'inicial') {
+                            showScreen('avaliacao-screen');
+                            loadQuestion(currentQuestion);
+                            updateProgress();
+                        } else {
+                            showScreen('resultado-final-screen');
+                            document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
+                            document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
+                            let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+                            document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
+                        }
+                    }
+                });
             }
         }
 
@@ -85,14 +159,16 @@
 
     function setupEventListeners() {
         document.querySelectorAll('.module-card').forEach(card => {
+            const moduleKey = card.getAttribute('data-module');
+            const config = modulesConfig.find(m => m.key === moduleKey);
             const moduleButton = card.querySelector('button');
+            if (!config || !moduleButton) return;
             moduleButton.addEventListener('click', function() {
-                const moduleType = card.getAttribute('data-module');
-                if (moduleType === 'seguranca') {
-                    showScreen('seguranca-inicio');
-                } else {
+                if (!config.active) {
                     alert('Este módulo está em desenvolvimento e estará disponível em breve.');
+                    return;
                 }
+                loadModule(config);
             });
         });
 
@@ -140,7 +216,8 @@
 
         document.getElementById('new-evaluation-btn').addEventListener('click', function() {
             resetApplication();
-            showScreen('seguranca-inicio');
+            if (currentModule) updateModuleTexts(currentModule);
+            showScreen('module-intro-screen');
         });
     }
 
@@ -223,6 +300,7 @@
 
     function salvarProgresso() {
         localStorage.setItem('progressoAvaliacao', JSON.stringify({
+            moduleKey: currentModule ? currentModule.key : null,
             currentQuestion,
             respostasInicial,
             respostasFinal,
