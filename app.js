@@ -15,6 +15,20 @@
 
     let screens = null;
 
+    function calculateScore(respostas) {
+        let score = 0;
+        for (let i = 0; i < gabarito.length; i++) {
+            if (respostas[i] === gabarito[i]) score++;
+        }
+        return score;
+    }
+
+    function calcularEficacia(notaInicial, notaFinal, total) {
+        if (notaInicial === null || notaFinal === null) return 0;
+        let eficacia = ((notaFinal - notaInicial) / (total - notaInicial)) * 100;
+        return Math.max(0, Math.round(eficacia));
+    }
+
     function showScreen(screenId) {
         if (!screens) {
             screens = document.querySelectorAll('.screen');
@@ -30,6 +44,12 @@
         if (exportBtn) {
             exportBtn.style.display = (screenId === 'resultado-final-screen') ? 'inline-block' : 'none';
         }
+    }
+
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { calculateScore, calcularEficacia };
+        return;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -189,19 +209,6 @@
         updateNavigationButtons();
     }
 
-    function calculateScore(respostas) {
-        let score = 0;
-        for (let i = 0; i < gabarito.length; i++) {
-            if (respostas[i] === gabarito[i]) score++;
-        }
-        return score;
-    }
-
-    function calcularEficacia(notaInicial, notaFinal, total) {
-        if (notaInicial === null || notaFinal === null) return 0;
-        let eficacia = ((notaFinal - notaInicial) / (total - notaInicial)) * 100;
-        return Math.max(0, Math.round(eficacia));
-    }
 
     function updateProgress() {
         const progressFill = document.getElementById('progress-fill');
@@ -335,9 +342,7 @@
         URL.revokeObjectURL(url);
     }
 
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = { calculateScore, calcularEficacia };
-    } else {
+    if (typeof window !== 'undefined') {
         window.calculateScore = calculateScore;
         window.calcularEficacia = calcularEficacia;
     }
