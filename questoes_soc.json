@@ -1,0 +1,112 @@
+[
+  {
+    "numero": 1,
+    "pergunta": "Quais são os tipos de riscos que podem ser cadastrados no sistema SOC e onde a vinculação com a Tabela 24 do eSocial é realizada para o preenchimento de agentes nocivos e atividades?",
+    "alternativas": [
+      "A) Tipos: Físicos, Biológicos, Ergonômicos; a vinculação é realizada na tela de \"Parâmetros Gerais\" da empresa.",
+      "B) Tipos: Químicos, Acidentes, Inespecíficos; a vinculação é feita no cadastro de \"Grupos de Exposição Homogênea (GHE)\".",
+      "C) Tipos: Físicos, Químicos, Biológicos, Ergonômicos, Acidentes e Inespecíficos; a vinculação para agentes nocivos e atividades eSocial é configurada através da funcionalidade \"Cadastro eSocial - Tabela 24\" no cadastro do Risco.",
+      "D) Tipos: Apenas Físicos e Químicos; a vinculação é realizada diretamente na \"Ficha Clínica\" do funcionário."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 2,
+    "pergunta": "Ao configurar um risco quantitativo no sistema SOC, qual é a funcionalidade e importância dos campos \"Limite de Tolerância\" e \"Nível de Ação\"?",
+    "alternativas": [
+      "A) Servem para classificar o risco como \"Alto\" ou \"Baixo\" automaticamente, e o sistema impede a gravação do risco se não forem preenchidos.",
+      "B) São utilizados para determinar a periodicidade da medição do risco, e sua ausência apenas gera um aviso informativo.",
+      "C) Definem os valores máximos permitidos e os níveis de alerta para o risco, respectivamente; são cruciais para que a periodicidade do exame se baseie na medição e para que o limite selecionado seja visualizado nos quadros de riscos do PPRA e LTCAT.",
+      "D) Indicam a intensidade do risco para fins de cálculo de periculosidade, sendo ignorados se o risco for qualitativo."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 3,
+    "pergunta": "Descreva o processo para cadastrar um Grupo Homogêneo de Exposição (GHE) no SOC, incluindo as informações essenciais que devem ser preenchidas e a importância de vincular riscos e exames a um GHE.",
+    "alternativas": [
+      "A) O cadastro do GHE é feito automaticamente pelo sistema com base nos funcionários, e a vinculação de riscos e exames é opcional, sem impacto nos documentos legais.",
+      "B) O GHE é cadastrado apenas com um nome e responsável; a vinculação de riscos e exames é realizada em módulos separados, sem conexão direta com o GHE.",
+      "C) Um GHE é cadastrado com nome, responsável, descrição e a opção \"GHE exclusivo para trabalhadores avulsos\"; é fundamental vincular riscos e exames a ele para que sejam contemplados no PCMSO e ASOs criados através da Gestão de Convocação.",
+      "D) O processo de cadastro é exclusivo para trabalhadores temporários, e a importância da vinculação se limita ao controle de estoque de EPIs."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 4,
+    "pergunta": "Como a caracterização de riscos é visualmente representada dentro de um GHE (Grupo de Exposição) no SOC, e qual é o processo para incluir a data de início e fim da exposição ao risco nessa caracterização?",
+    "alternativas": [
+      "A) A caracterização é indicada por um semáforo de cores (vermelho, amarelo, verde), e as datas são preenchidas automaticamente ao salvar.",
+      "B) A caracterização é visualmente sinalizada por cores (verde para caracterizado, vazio para não caracterizado), e as datas de início e fim da exposição ao risco são incluídas através do ícone \"Incluir Validade da Característica\".",
+      "C) O status da caracterização é exibido apenas por texto no relatório; as datas de exposição são adicionadas em uma tela separada de histórico de riscos.",
+      "D) Não há representação visual específica para a caracterização de riscos em GHEs; as datas são preenchidas manualmente no campo de observações."
+    ],
+    "respostaCerta": "B"
+  },
+  {
+    "numero": 5,
+    "pergunta": "No SOC, qual é o procedimento para o gerenciamento de turmas de treinamento, incluindo a emissão de certificados, e quais informações são essenciais para este processo?",
+    "alternativas": [
+      "A) As turmas são gerenciadas na aba \"Funcionários\", e a emissão de certificados é feita por um processo manual fora do sistema, sem integração.",
+      "B) O gerenciamento ocorre pela \"Gestão Externa\", e as informações essenciais para a emissão de certificados são apenas o nome do curso e a carga horária.",
+      "C) O gerenciamento de turmas (Gestão SOC) inclui o preenchimento de campos obrigatórios como Nome, Período (início e fim), Hora 1º momento, Duração, Instrutor(es), Modalidade, Tipo de treinamento, Cursos e Funcionários; o sistema permite imprimir \"Certificado\" e \"Certificado Coletivo\" para essas turmas.",
+      "D) O SOC apenas registra o histórico dos treinamentos realizados, sem a funcionalidade de gerenciamento de turmas ou a emissão de certificados padronizados."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 6,
+    "pergunta": "No sistema SOC, como é realizado o cadastro de um EPI (Equipamento de Proteção Individual) com base no Certificado de Aprovação (CA), e quais validações o sistema SOC pode realizar ao buscar um CA?",
+    "alternativas": [
+      "A) O cadastro de EPI é feito apenas pelo nome, sem a necessidade de um CA; o SOC não realiza validações de CA, pois isso é responsabilidade do usuário.",
+      "B) O cadastro de EPI exige que o CA seja digitado manualmente; o sistema apenas verifica se o campo CA não está vazio.",
+      "C) O cadastro de um EPI pode ser realizado com base no CA, permitindo a busca por este código; o SOC realiza validações como a verificação de informações do CA e, caso o controle de estoque por saldo seja obrigatório, exibirá o EPI na cor vermelha se não houver quantidade disponível para entrega, impedindo seu uso.",
+      "D) O EPI é cadastrado sem o CA no sistema principal; a validação do CA é feita apenas por meio de importação de planilhas."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 7,
+    "pergunta": "Quais são as principais seções e informações consideradas para a emissão de um Laudo de Periculosidade no SOC, e como o sistema auxilia na conformidade com a Norma Regulamentadora 16 (NR-16)?",
+    "alternativas": [
+      "A) As principais seções são \"Histórico de Acidentes\" e \"Medições de Ruído\"; a conformidade com a NR-16 é verificada por um auditor externo.",
+      "B) Apenas a \"Classificação de Riscos\" e \"Recomendações\" são seções, sem relação direta com a NR-16.",
+      "C) As principais informações e seções para a emissão do Laudo de Periculosidade incluem dados da unidade, caracterização de periculosidade (com EPIs, EPCs, perigos/fatores de risco e parecer técnico), síntese das hierarquias e assinaturas dos responsáveis, auxiliando na conformidade com a NR-16 ao permitir o detalhamento das condições e indicação da periculosidade.",
+      "D) O sistema gera o laudo de periculosidade de forma simplificada, focando apenas no nome do funcionário e no risco sem seções detalhadas, e a NR-16 é um critério externo."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 8,
+    "pergunta": "No Relatório de Laudo de Insalubridade do SOC, quais são os tipos de riscos contemplados por padrão, como as informações da característica dos riscos são exibidas, e o que a coluna \"Insalubridade\" indica?",
+    "alternativas": [
+      "A) São contemplados apenas riscos ergonômicos e de acidentes; as informações são exibidas em gráficos; a coluna \"Insalubridade\" indica a validade do laudo.",
+      "B) Os tipos de riscos contemplados por padrão são Físicos, Químicos e Biológicos; as informações da característica dos riscos são exibidas com detalhes como descrição, possíveis lesões e fontes geradoras; a coluna \"Insalubridade\" indica o grau de insalubridade (Mínimo, Médio ou Máximo) ou \"Não informado\".",
+      "C) Todos os tipos de riscos são contemplados; são exibidas apenas as fontes geradoras; a coluna \"Insalubridade\" indica se o risco é quantitativo ou qualitativo.",
+      "D) Apenas riscos químicos e inespecíficos são contemplados; as informações são exibidas de forma resumida; a coluna \"Insalubridade\" indica o número de funcionários expostos."
+    ],
+    "respostaCerta": "B"
+  },
+  {
+    "numero": 9,
+    "pergunta": "Qual é o objetivo do módulo de Gerenciamento de Riscos Ocupacionais (GRO) no SOC e como ele se integra com o Inventário de Riscos e o Plano de Ação para a gestão da saúde e segurança do trabalho, conforme a NR-1?",
+    "alternativas": [
+      "A) O GRO tem como objetivo principal o controle financeiro dos exames, integrando-se apenas com a tela de cobrança, sem relação com riscos.",
+      "B) O módulo GRO é utilizado para o agendamento de consultas médicas, e o Inventário de Riscos e Plano de Ação são relatórios de presença.",
+      "C) O GRO visa o gerenciamento de riscos ocupacionais, conforme a NR-1, integrando o Inventário de Riscos (que exibe os perigos/fatores de risco aplicados e caracterizados) e o Plano de Ação (para definição de medidas de controle e melhorias), permitindo a avaliação e classificação dos riscos.",
+      "D) O GRO é um módulo de treinamentos obrigatórios, e sua integração com Inventário de Riscos e Plano de Ação serve apenas para emitir certificados de participação."
+    ],
+    "respostaCerta": "C"
+  },
+  {
+    "numero": 10,
+    "pergunta": "De que forma a Inteligência Artificial (SIA) pode auxiliar no módulo de Segurança do Trabalho do SOC?",
+    "alternativas": [
+      "A) A SIA é responsável por realizar a importação automática de dados de funcionários, sem interação com a gestão de riscos.",
+      "B) A SIA pode gerar relatórios de absenteísmo e controlar a validade de EPIs, mas não interage com a caracterização de riscos.",
+      "C) A SIA pode auxiliar na avaliação de riscos ao permitir o upload de imagens do ambiente de trabalho para sugerir perigos/fatores de risco, e também na caracterização do risco, sugerindo informações detalhadas a serem inseridas na característica do risco após análise da aplicação.",
+      "D) A SIA automatiza todo o processo de gestão de segurança do trabalho, eliminando a necessidade de intervenção humana na caracterização e identificação de riscos."
+    ],
+    "respostaCerta": "C"
+  }
+]

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Avaliação Modular - Bplan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__content">
+                <div class="logo">
+                    <h1>Bplan</h1>
+                    <span>Sistema de Avaliação Modular</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Home Screen -->
+            <div id="home-screen" class="screen active">
+                <div class="welcome">
+                    <h2>Bem-vindo ao Sistema de Avaliação</h2>
+                    <p>Selecione um módulo para começar sua avaliação</p>
+                </div>
+                
+                <div class="modules-grid">
+                    <!-- Módulo 1 - Segurança do Trabalho -->
+                    <div class="module-card active" data-module="seguranca">
+                        <div class="module-icon">🛡️</div>
+                        <h3>Módulo 1 - Segurança do Trabalho</h3>
+                        <p>Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)</p>
+                        <div class="module-status active">Ativo</div>
+                        <button class="btn btn--primary">Iniciar Avaliação</button>
+                    </div>
+
+                    <!-- Módulo 2 - Saúde Ocupacional -->
+                    <div class="module-card disabled" data-module="saude">
+                        <div class="module-icon">🏥</div>
+                        <h3>Módulo 2 - Saúde Ocupacional</h3>
+                        <p>Avaliação de programas de saúde ocupacional e medicina do trabalho</p>
+                        <div class="module-status development">Em Desenvolvimento</div>
+                        <button class="btn btn--secondary" disabled>Em Breve</button>
+                    </div>
+
+                    <!-- Módulo 3 - Financeiro -->
+                    <div class="module-card disabled" data-module="financeiro">
+                        <div class="module-icon">💰</div>
+                        <h3>Módulo 3 - Financeiro</h3>
+                        <p>Gestão financeira e análise de custos em segurança do trabalho</p>
+                        <div class="module-status development">Em Desenvolvimento</div>
+                        <button class="btn btn--secondary" disabled>Em Breve</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segurança Module Screens -->
+            <div id="seguranca-inicio" class="screen">
+                <div class="breadcrumb">
+                    <span>Início</span> > <span class="active">Módulo 1 - Segurança do Trabalho</span>
+                </div>
+                
+                <div class="module-intro">
+                    <h2>Módulo 1 - Segurança do Trabalho</h2>
+                    <p>Este módulo avalia seus conhecimentos sobre o Sistema SOC (Segurança Ocupacional e Saúde).</p>
+                    <p>Você realizará duas avaliações: uma inicial e uma final. Com base nos resultados, calcularemos sua eficácia de aprendizado.</p>
+                    
+                    <div class="form-group">
+                        <label for="user-name" class="form-label">Digite seu nome para começar:</label>
+                        <input type="text" id="user-name" class="form-control" placeholder="Seu nome completo">
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="start-initial-btn" class="btn btn--primary">Iniciar Avaliação Inicial</button>
+                        <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avaliação Screen -->
+            <div id="avaliacao-screen" class="screen">
+                <div class="breadcrumb">
+                    <span>Início</span> > <span>Módulo 1</span> > <span class="active" id="breadcrumb-avaliacao">Avaliação Inicial</span>
+                </div>
+                
+                <div class="avaliacao-header">
+                    <h2 id="avaliacao-title">Avaliação Inicial</h2>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <span class="progress-text" id="progress-text">Questão 1 de 10</span>
+                    </div>
+                </div>
+
+                <div class="questao-container">
+                    <div class="questao-numero" id="questao-numero">1</div>
+                    <div class="questao-content">
+                        <h3 id="questao-texto"></h3>
+                        <div class="alternativas" id="alternativas-container"></div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="prev-question" class="btn btn--outline">Anterior</button>
+                    <button id="next-question" class="btn btn--primary">Próxima</button>
+                    <button id="finish-evaluation" class="btn btn--primary hidden">Finalizar Avaliação</button>
+                    <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
+                </div>
+            </div>
+
+            <!-- Resultado Screen -->
+            <div id="resultado-screen" class="screen">
+                <div class="breadcrumb">
+                    <span>Início</span> > <span>Módulo 1</span> > <span class="active" id="breadcrumb-resultado">Resultado Inicial</span>
+                </div>
+                
+                <div class="resultado-content">
+                    <h2 id="resultado-title">Resultado da Avaliação Inicial</h2>
+                    <div class="resultado-score">
+                        <div class="score-circle">
+                            <span id="score-value">0</span>
+                            <span class="score-total">/10</span>
+                        </div>
+                        <p id="score-percentage">0%</p>
+                    </div>
+                    
+                    <div class="resultado-details" id="resultado-details">
+                        <h3>Respostas:</h3>
+                        <div id="answers-review"></div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="continue-to-instructions" class="btn btn--primary">Continuar</button>
+                        <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instruções Screen -->
+            <div id="instrucoes-screen" class="screen">
+                <div class="breadcrumb">
+                    <span>Início</span> > <span>Módulo 1</span> > <span class="active">Instruções</span>
+                </div>
+                
+                <div class="instrucoes-content">
+                    <h2>Instruções para Avaliação Final</h2>
+                    <div class="instrucoes-text">
+                        <p>Parabéns por completar a avaliação inicial!</p>
+                        <p><strong>Sua nota inicial:</strong> <span id="initial-score-display">0</span>/10</p>
+                        
+                        <div class="info-box">
+                            <h3>Próximos Passos:</h3>
+                            <ul>
+                                <li>Você agora realizará a <strong>Avaliação Final</strong></li>
+                                <li>São as mesmas 10 questões da avaliação inicial</li>
+                                <li>Ao final, calcularemos sua <strong>eficácia de aprendizado</strong></li>
+                                <li>A eficácia mostra o quanto você melhorou entre as duas avaliações</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="formula-info">
+                            <h4>Fórmula da Eficácia:</h4>
+                            <p class="formula">((Nota Final - Nota Inicial) / (10 - Nota Inicial)) × 100</p>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="start-final-btn" class="btn btn--primary">Iniciar Avaliação Final</button>
+                        <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultado Final Screen -->
+            <div id="resultado-final-screen" class="screen">
+                <div class="breadcrumb">
+                    <span>Início</span> > <span>Módulo 1</span> > <span class="active">Resultado Final</span>
+                </div>
+                
+                <div class="resultado-final-content">
+                    <h2>Resultado Final - Cálculo de Eficácia</h2>
+                    
+                    <div class="scores-comparison">
+                        <div class="score-item">
+                            <h3>Avaliação Inicial</h3>
+                            <div class="score-value" id="initial-final-score">0/10</div>
+                        </div>
+                        <div class="score-arrow">→</div>
+                        <div class="score-item">
+                            <h3>Avaliação Final</h3>
+                            <div class="score-value" id="final-final-score">0/10</div>
+                        </div>
+                    </div>
+                    
+                    <div class="eficacia-result">
+                        <h3>Eficácia de Aprendizado</h3>
+                        <div class="eficacia-circle">
+                            <span id="eficacia-percentage">0%</span>
+                        </div>
+                        <div class="eficacia-category" id="eficacia-category">Regular</div>
+                        <p id="eficacia-description"></p>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="new-evaluation-btn" class="btn btn--primary">Fazer Nova Avaliação</button>
+                        <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
