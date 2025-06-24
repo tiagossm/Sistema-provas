@@ -1,6 +1,37 @@
 (() => {
+    const modulesConfig = [
+        {
+            key: 'seguranca',
+            name: 'Módulo 1 - Segurança do Trabalho',
+            description: 'Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)',
+            jsonPath: 'questoes_soc.json',
+            icon: '🛡️',
+            active: true
+        },
+        {
+            key: 'saude',
+            name: 'Módulo 2 - Saúde Ocupacional',
+            description: 'Avaliação de programas de saúde ocupacional e medicina do trabalho',
+            jsonPath: 'questoes_saude.json',
+            icon: '🏥',
+            active: false
+        },
+        {
+            key: 'financeiro',
+            name: 'Módulo 3 - Financeiro',
+            description: 'Gestão financeira e análise de custos em segurança do trabalho',
+            jsonPath: 'questoes_financeiro.json',
+            icon: '💰',
+            active: false
+        }
+    ];
+
+    let currentModule = null;
     // Centralização do gabarito (ordem das respostas corretas)
     const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
+
+    // Endpoint para envio de resultados
+    const WEBHOOK_URL = 'https://example.com/webhook';
 
     // Encapsular variáveis principais
     let questoes = [];
@@ -46,47 +77,92 @@
         }
     }
 
-
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = { calculateScore, calcularEficacia };
         return;
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        fetch('questoes_soc.json')
+    function buildModulesGrid() {
+        const grid = document.getElementById('modules-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        modulesConfig.forEach(mod => {
+            const card = document.createElement('div');
+            card.className = `module-card ${mod.active ? 'active' : 'disabled'}`;
+            card.dataset.module = mod.key;
+            card.innerHTML = `
+                <div class="module-icon">${mod.icon}</div>
+                <h3>${mod.name}</h3>
+                <p>${mod.description}</p>
+                <div class="module-status ${mod.active ? 'active' : 'development'}">${mod.active ? 'Ativo' : 'Em Desenvolvimento'}</div>
+                <button class="btn ${mod.active ? 'btn--primary' : 'btn--secondary'}" ${mod.active ? '' : 'disabled'}>${mod.active ? 'Iniciar Avaliação' : 'Em Breve'}</button>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function fetchModuleQuestions(mod) {
+        return fetch(mod.jsonPath)
             .then(res => res.json())
             .then(data => {
                 questoes = data;
                 totalQuestions = questoes.length;
                 respostasInicial = Array(totalQuestions).fill(null);
                 respostasFinal = Array(totalQuestions).fill(null);
-                setupEventListeners();
             })
-            .catch(() => alert("Erro ao carregar questões."));
+            .catch(() => alert('Erro ao carregar questões.'));
+    }
+
+    function updateModuleTexts(mod) {
+        document.getElementById('breadcrumb-module-name').textContent = mod.name;
+        document.querySelectorAll('.breadcrumb-module').forEach(el => el.textContent = mod.name);
+        const title = document.getElementById('module-title');
+        const desc = document.getElementById('module-description');
+        if (title) title.textContent = mod.name;
+        if (desc) desc.textContent = mod.description;
+    }
+
+    function loadModule(mod) {
+        currentModule = mod;
+        fetchModuleQuestions(mod).then(() => {
+            updateModuleTexts(mod);
+            showScreen('module-intro-screen');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        buildModulesGrid();
+        setupEventListeners();
 
         const progresso = localStorage.getItem('progressoAvaliacao');
         if (progresso) {
             const dadosProgresso = JSON.parse(progresso);
-            const confirmarRetomar = confirm("Você tem um progresso salvo. Deseja retomar a avaliação?");
-            if (confirmarRetomar) {
-                currentQuestion = dadosProgresso.currentQuestion;
-                respostasInicial = dadosProgresso.respostasInicial;
-                respostasFinal = dadosProgresso.respostasFinal;
-                avaliacaoAtual = dadosProgresso.avaliacaoAtual;
-                notaInicial = dadosProgresso.notaInicial;
-                notaFinal = dadosProgresso.notaFinal;
-                userName = dadosProgresso.userName;
-                if (avaliacaoAtual === 'inicial') {
-                    showScreen('avaliacao-screen');
-                    loadQuestion(currentQuestion);
-                    updateProgress();
-                } else {
-                    showScreen('resultado-final-screen');
-                    document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
-                    document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
-                    let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
-                    document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
-                }
+            currentModule = modulesConfig.find(m => m.key === dadosProgresso.moduleKey) || null;
+            if (currentModule) {
+                fetchModuleQuestions(currentModule).then(() => {
+                    const confirmarRetomar = confirm("Você tem um progresso salvo. Deseja retomar a avaliação?");
+                    if (confirmarRetomar) {
+                        currentQuestion = dadosProgresso.currentQuestion;
+                        respostasInicial = dadosProgresso.respostasInicial;
+                        respostasFinal = dadosProgresso.respostasFinal;
+                        avaliacaoAtual = dadosProgresso.avaliacaoAtual;
+                        notaInicial = dadosProgresso.notaInicial;
+                        notaFinal = dadosProgresso.notaFinal;
+                        userName = dadosProgresso.userName;
+                        updateModuleTexts(currentModule);
+                        if (avaliacaoAtual === 'inicial') {
+                            showScreen('avaliacao-screen');
+                            loadQuestion(currentQuestion);
+                            updateProgress();
+                        } else {
+                            showScreen('resultado-final-screen');
+                            document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
+                            document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
+                            let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+                            document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
+                        }
+                    }
+                });
             }
         }
 
@@ -105,14 +181,16 @@
 
     function setupEventListeners() {
         document.querySelectorAll('.module-card').forEach(card => {
+            const moduleKey = card.getAttribute('data-module');
+            const config = modulesConfig.find(m => m.key === moduleKey);
             const moduleButton = card.querySelector('button');
+            if (!config || !moduleButton) return;
             moduleButton.addEventListener('click', function() {
-                const moduleType = card.getAttribute('data-module');
-                if (moduleType === 'seguranca') {
-                    showScreen('seguranca-inicio');
-                } else {
+                if (!config.active) {
                     alert('Este módulo está em desenvolvimento e estará disponível em breve.');
+                    return;
                 }
+                loadModule(config);
             });
         });
 
@@ -160,7 +238,8 @@
 
         document.getElementById('new-evaluation-btn').addEventListener('click', function() {
             resetApplication();
-            showScreen('seguranca-inicio');
+            if (currentModule) updateModuleTexts(currentModule);
+            showScreen('module-intro-screen');
         });
     }
 
@@ -176,6 +255,10 @@
     function loadQuestion(num) {
         const questao = questoes[num - 1];
         const alternativasContainer = document.getElementById('alternativas-container');
+        const questionContainer = document.querySelector('.questao-container');
+        if (questionContainer) questionContainer.classList.remove('unanswered');
+        const warningEl = document.getElementById('unanswered-warning');
+        if (warningEl) warningEl.classList.add('hidden');
         document.getElementById('questao-numero').textContent = num;
         document.getElementById('questao-texto').textContent = questao.pergunta;
         alternativasContainer.innerHTML = '';
@@ -186,10 +269,22 @@
                 : respostasFinal[num - 1] === letter;
             const alternativaEl = document.createElement('div');
             alternativaEl.className = `alternativa${isSelected ? ' selected' : ''}`;
-            alternativaEl.innerHTML = `
-                <input type="radio" id="alt-${letter}" name="question${num}" value="${letter}" ${isSelected ? 'checked' : ''}>
-                <label for="alt-${letter}" class="alternativa-text">${alternativa}</label>
-            `;
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'radio';
+            inputEl.id = `alt-${letter}`;
+            inputEl.name = `question${num}`;
+            inputEl.value = letter;
+            if (isSelected) inputEl.checked = true;
+
+            const labelEl = document.createElement('label');
+            labelEl.setAttribute('for', `alt-${letter}`);
+            labelEl.className = 'alternativa-text';
+            labelEl.textContent = alternativa;
+
+            alternativaEl.appendChild(inputEl);
+            alternativaEl.appendChild(labelEl);
+
             alternativaEl.addEventListener('click', function() {
                 document.querySelectorAll('.alternativa').forEach(alt => {
                     alt.classList.remove('selected');
@@ -201,6 +296,8 @@
                 } else {
                     respostasFinal[num - 1] = letter;
                 }
+                if (questionContainer) questionContainer.classList.remove('unanswered');
+                if (warningEl) warningEl.classList.add('hidden');
                 updateNavigationButtons();
                 salvarProgresso();
             });
@@ -230,6 +327,7 @@
 
     function salvarProgresso() {
         localStorage.setItem('progressoAvaliacao', JSON.stringify({
+            moduleKey: currentModule ? currentModule.key : null,
             currentQuestion,
             respostasInicial,
             respostasFinal,
@@ -274,6 +372,13 @@
             currentQuestion = unansweredQuestions + 1;
             loadQuestion(currentQuestion);
             updateProgress();
+            const questionContainer = document.querySelector('.questao-container');
+            const warningEl = document.getElementById('unanswered-warning');
+            if (questionContainer) questionContainer.classList.add('unanswered');
+            if (warningEl) {
+                warningEl.textContent = 'Responda esta questão antes de continuar.';
+                warningEl.classList.remove('hidden');
+            }
             return;
         }
         if (avaliacaoAtual === 'inicial') {
@@ -291,7 +396,36 @@
             if (finalFinalScore) finalFinalScore.textContent = `${notaFinal}/${totalQuestions}`;
             let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
             if (eficaciaPercentage) eficaciaPercentage.textContent = `${eficacia}%`;
+            enviarResultadoParaPlanilha();
         }
+    }
+
+    function enviarResultadoParaPlanilha() {
+        const eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+        fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nome: userName,
+                notaInicial,
+                notaFinal,
+                eficacia,
+                respostasInicial,
+                respostasFinal
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Erro');
+            return res.text();
+        })
+        .then(() => {
+            const msg = document.getElementById('mensagem-envio');
+            if (msg) msg.textContent = 'Resultado enviado com sucesso!';
+        })
+        .catch(() => {
+            const msg = document.getElementById('mensagem-envio');
+            if (msg) msg.textContent = 'Falha ao enviar o resultado.';
+        });
     }
 
     function resetApplication() {
@@ -306,11 +440,6 @@
         localStorage.removeItem('progressoAvaliacao');
     }
 
-    window.addEventListener('keydown', function(e) {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-            alert("Modo desenvolvedor ativado. Jogue limpo!");
-        }
-    });
 
     function exportarResultadoCSV() {
         const header = [
