@@ -1,12 +1,12 @@
 // ====== CONFIGURAÇÃO ======
-const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec"
+const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec";
 
 // Global variables
 let currentQuestion = 1;
 let totalQuestions = 10;
 let questoes = [];
-let respostasInicial = Array(totalQuestions).fill(null);
-let respostasFinal = Array(totalQuestions).fill(null);
+let respostasInicial = [];
+let respostasFinal = [];
 let notaInicial = 0;
 let notaFinal = 0;
 let userName = "";
@@ -15,23 +15,21 @@ let avaliacaoAtual = "inicial"; // 'inicial' ou 'final'
 // DOM elements
 const screens = document.querySelectorAll('.screen');
 
-// Load questions from JSON file
+// Load questions from questoes_soc.json
 document.addEventListener('DOMContentLoaded', async function() {
     try {
-        questoes = getQuestions();
+        // Carregar o JSON externo
+        const response = await fetch('questoes_soc.json');
+        questoes = await response.json();
+        totalQuestions = questoes.length;
+        respostasInicial = Array(totalQuestions).fill(null);
+        respostasFinal = Array(totalQuestions).fill(null);
         setupEventListeners();
     } catch (error) {
         console.error('Erro ao carregar as questões:', error);
         alert('Erro ao carregar as questões. Por favor, tente novamente mais tarde.');
     }
 });
-
-function getQuestions() {
-    // ... Suas questões aqui ...
-    return [
-      // Coloque o array de questões aqui
-    ];
-}
 
 function setupEventListeners() {
     // Module selection
@@ -237,7 +235,7 @@ function enviarResultadoParaPlanilha(dados) {
         },
         body: JSON.stringify(dados)
     }).then(response => {
-        // Opcional: mostrar mensagem de sucesso
+        // Sucesso: opcional, mostrar confirmação
     }).catch(error => {
         alert('Erro ao salvar resultado na planilha.');
     });
@@ -252,4 +250,3 @@ function resetApplication() {
     userName = "";
     avaliacaoAtual = "inicial";
 }
-
