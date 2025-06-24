@@ -156,6 +156,10 @@
     function loadQuestion(num) {
         const questao = questoes[num - 1];
         const alternativasContainer = document.getElementById('alternativas-container');
+        const questionContainer = document.querySelector('.questao-container');
+        if (questionContainer) questionContainer.classList.remove('unanswered');
+        const warningEl = document.getElementById('unanswered-warning');
+        if (warningEl) warningEl.classList.add('hidden');
         document.getElementById('questao-numero').textContent = num;
         document.getElementById('questao-texto').textContent = questao.pergunta;
         alternativasContainer.innerHTML = '';
@@ -181,6 +185,8 @@
                 } else {
                     respostasFinal[num - 1] = letter;
                 }
+                if (questionContainer) questionContainer.classList.remove('unanswered');
+                if (warningEl) warningEl.classList.add('hidden');
                 updateNavigationButtons();
                 salvarProgresso();
             });
@@ -267,6 +273,13 @@
             currentQuestion = unansweredQuestions + 1;
             loadQuestion(currentQuestion);
             updateProgress();
+            const questionContainer = document.querySelector('.questao-container');
+            const warningEl = document.getElementById('unanswered-warning');
+            if (questionContainer) questionContainer.classList.add('unanswered');
+            if (warningEl) {
+                warningEl.textContent = 'Responda esta questão antes de continuar.';
+                warningEl.classList.remove('hidden');
+            }
             return;
         }
         if (avaliacaoAtual === 'inicial') {
