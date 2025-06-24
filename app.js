@@ -1,5 +1,5 @@
 // ====== CONFIGURAÇÃO ======
-const WEBHOOK_URL = https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec
+const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec"
 
 // Global variables
 let currentQuestion = 1;
