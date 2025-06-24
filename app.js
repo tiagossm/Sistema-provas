@@ -434,11 +434,6 @@
         localStorage.removeItem('progressoAvaliacao');
     }
 
-    window.addEventListener('keydown', function(e) {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-            alert("Modo desenvolvedor ativado. Jogue limpo!");
-        }
-    });
 
     function exportarResultadoCSV() {
         const header = [
