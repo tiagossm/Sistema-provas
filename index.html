@@ -29,45 +29,18 @@
                     <p>Selecione um módulo para começar sua avaliação</p>
                 </div>
                 
-                <div class="modules-grid">
-                    <!-- Módulo 1 - Segurança do Trabalho -->
-                    <div class="module-card active" data-module="seguranca">
-                        <div class="module-icon">🛡️</div>
-                        <h3>Módulo 1 - Segurança do Trabalho</h3>
-                        <p>Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)</p>
-                        <div class="module-status active">Ativo</div>
-                        <button class="btn btn--primary">Iniciar Avaliação</button>
-                    </div>
-
-                    <!-- Módulo 2 - Saúde Ocupacional -->
-                    <div class="module-card disabled" data-module="saude">
-                        <div class="module-icon">🏥</div>
-                        <h3>Módulo 2 - Saúde Ocupacional</h3>
-                        <p>Avaliação de programas de saúde ocupacional e medicina do trabalho</p>
-                        <div class="module-status development">Em Desenvolvimento</div>
-                        <button class="btn btn--secondary" disabled>Em Breve</button>
-                    </div>
-
-                    <!-- Módulo 3 - Financeiro -->
-                    <div class="module-card disabled" data-module="financeiro">
-                        <div class="module-icon">💰</div>
-                        <h3>Módulo 3 - Financeiro</h3>
-                        <p>Gestão financeira e análise de custos em segurança do trabalho</p>
-                        <div class="module-status development">Em Desenvolvimento</div>
-                        <button class="btn btn--secondary" disabled>Em Breve</button>
-                    </div>
-                </div>
+                <div class="modules-grid" id="modules-grid"></div>
             </div>
 
-            <!-- Segurança Module Screens -->
-            <div id="seguranca-inicio" class="screen">
+            <!-- Module Intro Screen -->
+            <div id="module-intro-screen" class="screen">
                 <div class="breadcrumb">
-                    <span>Início</span> > <span class="active">Módulo 1 - Segurança do Trabalho</span>
+                    <span>Início</span> > <span class="active" id="breadcrumb-module-name"></span>
                 </div>
                 
                 <div class="module-intro">
-                    <h2>Módulo 1 - Segurança do Trabalho</h2>
-                    <p>Este módulo avalia seus conhecimentos sobre o Sistema SOC (Segurança Ocupacional e Saúde).</p>
+                    <h2 id="module-title"></h2>
+                    <p id="module-description"></p>
                     <p>Você realizará duas avaliações: uma inicial e uma final. Com base nos resultados, calcularemos sua eficácia de aprendizado.</p>
                     
                     <div class="form-group">
@@ -85,7 +58,7 @@
             <!-- Avaliação Screen -->
             <div id="avaliacao-screen" class="screen">
                 <div class="breadcrumb">
-                    <span>Início</span> > <span>Módulo 1</span> > <span class="active" id="breadcrumb-avaliacao">Avaliação Inicial</span>
+                    <span>Início</span> > <span class="breadcrumb-module"></span> > <span class="active" id="breadcrumb-avaliacao">Avaliação Inicial</span>
                 </div>
                 
                 <div class="avaliacao-header">
@@ -118,7 +91,7 @@
             <!-- Resultado Screen -->
             <div id="resultado-screen" class="screen">
                 <div class="breadcrumb">
-                    <span>Início</span> > <span>Módulo 1</span> > <span class="active" id="breadcrumb-resultado">Resultado Inicial</span>
+                    <span>Início</span> > <span class="breadcrumb-module"></span> > <span class="active" id="breadcrumb-resultado">Resultado Inicial</span>
                 </div>
                 
                 <div class="resultado-content">
@@ -146,7 +119,7 @@
             <!-- Instruções Screen -->
             <div id="instrucoes-screen" class="screen">
                 <div class="breadcrumb">
-                    <span>Início</span> > <span>Módulo 1</span> > <span class="active">Instruções</span>
+                    <span>Início</span> > <span class="breadcrumb-module"></span> > <span class="active">Instruções</span>
                 </div>
                 
                 <div class="instrucoes-content">
@@ -181,7 +154,7 @@
             <!-- Resultado Final Screen -->
             <div id="resultado-final-screen" class="screen">
                 <div class="breadcrumb">
-                    <span>Início</span> > <span>Módulo 1</span> > <span class="active">Resultado Final</span>
+                    <span>Início</span> > <span class="breadcrumb-module"></span> > <span class="active">Resultado Final</span>
                 </div>
                 
                 <div class="resultado-final-content">
