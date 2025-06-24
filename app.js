@@ -30,6 +30,9 @@
     // Centralização do gabarito (ordem das respostas corretas)
     const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
 
+    // Endpoint para envio de resultados
+    const WEBHOOK_URL = 'https://example.com/webhook';
+
     // Encapsular variáveis principais
     let questoes = [];
     let respostasInicial = [];
@@ -387,7 +390,36 @@
             if (finalFinalScore) finalFinalScore.textContent = `${notaFinal}/${totalQuestions}`;
             let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
             if (eficaciaPercentage) eficaciaPercentage.textContent = `${eficacia}%`;
+            enviarResultadoParaPlanilha();
         }
+    }
+
+    function enviarResultadoParaPlanilha() {
+        const eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+        fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nome: userName,
+                notaInicial,
+                notaFinal,
+                eficacia,
+                respostasInicial,
+                respostasFinal
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Erro');
+            return res.text();
+        })
+        .then(() => {
+            const msg = document.getElementById('mensagem-envio');
+            if (msg) msg.textContent = 'Resultado enviado com sucesso!';
+        })
+        .catch(() => {
+            const msg = document.getElementById('mensagem-envio');
+            if (msg) msg.textContent = 'Falha ao enviar o resultado.';
+        });
     }
 
     function resetApplication() {
