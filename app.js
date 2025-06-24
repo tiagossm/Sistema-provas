@@ -31,6 +31,11 @@
                 screen.classList.remove('active');
             }
         });
+        // Mostrar botão de exportação apenas na tela de resultado final
+        const exportBtn = document.getElementById('export-csv-btn');
+        if (exportBtn) {
+            exportBtn.style.display = (screenId === 'resultado-final-screen') ? 'inline-block' : 'none';
+        }
     }
 
     // Carregar questões do JSON
@@ -73,6 +78,18 @@
         }
 
         screens = document.querySelectorAll('.screen');
+        // Botão de exportação (só adiciona se não existir)
+        if (!document.getElementById('export-csv-btn')) {
+            const exportBtn = document.createElement('button');
+            exportBtn.id = 'export-csv-btn';
+            exportBtn.className = 'btn btn--outline';
+            exportBtn.textContent = 'Exportar Resultado';
+            exportBtn.style.display = 'none';
+            exportBtn.addEventListener('click', exportarResultadoCSV);
+            // Adiciona na tela de resultado final, antes do botão "Fazer Nova Avaliação"
+            const actionBtns = document.querySelector('#resultado-final-screen .action-buttons');
+            if (actionBtns) actionBtns.insertBefore(exportBtn, actionBtns.firstChild);
+        }
     });
 
     function setupEventListeners() {
@@ -278,7 +295,8 @@
             document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
             document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
             let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
-            document.getElementById('eficacia-percentage').textContent = `${eficacia}%`;
+            // Correção: sempre exibe eficácia numérica, mesmo 0% ou negativo
+            document.getElementById('eficacia-percentage').textContent = `Eficácia: ${eficacia}%`;
             // Chamar função para enviar para a planilha
             enviarResultadoParaPlanilha({
                 nome: userName,
@@ -334,6 +352,39 @@
             alert("Modo desenvolvedor ativado. Jogue limpo!");
         }
     });
+
+    // Exportação de resultados em CSV
+    function exportarResultadoCSV() {
+        // Cabeçalho
+        const header = [
+            'Nome',
+            'Nota Inicial',
+            'Nota Final',
+            'Eficácia',
+            'Respostas Inicial',
+            'Respostas Final'
+        ];
+        // Linha de dados
+        const eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
+        const row = [
+            userName,
+            notaInicial,
+            notaFinal,
+            `${eficacia}%`,
+            respostasInicial.join(','),
+            respostasFinal.join(',')
+        ];
+        const csvContent = [header.join(','), row.join(',')].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `resultado_avaliacao_${userName.replace(/\s+/g, '_')}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 
     // ...restante do código...
 })();
