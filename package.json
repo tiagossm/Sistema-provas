@@ -1,0 +1,12 @@
+{
+  "name": "sistema-provas",
+  "version": "1.0.0",
+  "description": "Sistema de provas",
+  "main": "app.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

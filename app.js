@@ -191,7 +191,7 @@
 
     function calculateScore(respostas) {
         let score = 0;
-        for (let i = 0; i < totalQuestions; i++) {
+        for (let i = 0; i < gabarito.length; i++) {
             if (respostas[i] === gabarito[i]) score++;
         }
         return score;
@@ -333,5 +333,12 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { calculateScore, calcularEficacia };
+    } else {
+        window.calculateScore = calculateScore;
+        window.calcularEficacia = calcularEficacia;
     }
 })();
