@@ -247,10 +247,22 @@
                 : respostasFinal[num - 1] === letter;
             const alternativaEl = document.createElement('div');
             alternativaEl.className = `alternativa${isSelected ? ' selected' : ''}`;
-            alternativaEl.innerHTML = `
-                <input type="radio" id="alt-${letter}" name="question${num}" value="${letter}" ${isSelected ? 'checked' : ''}>
-                <label for="alt-${letter}" class="alternativa-text">${alternativa}</label>
-            `;
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'radio';
+            inputEl.id = `alt-${letter}`;
+            inputEl.name = `question${num}`;
+            inputEl.value = letter;
+            if (isSelected) inputEl.checked = true;
+
+            const labelEl = document.createElement('label');
+            labelEl.setAttribute('for', `alt-${letter}`);
+            labelEl.className = 'alternativa-text';
+            labelEl.textContent = alternativa;
+
+            alternativaEl.appendChild(inputEl);
+            alternativaEl.appendChild(labelEl);
+
             alternativaEl.addEventListener('click', function() {
                 document.querySelectorAll('.alternativa').forEach(alt => {
                     alt.classList.remove('selected');
