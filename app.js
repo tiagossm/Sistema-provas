@@ -2,9 +2,6 @@
     // Centralização do gabarito (ordem das respostas corretas)
     const gabarito = ["C","C","C","B","C","C","C","B","C","C"];
 
-    // ====== CONFIGURAÇÃO ======
-    const WEBHOOK_URL = "https://script.google.com/a/macros/grupobplan.com.br/s/AKfycbyZEnh1sstlXo2pgQzYRyPaoNP6Q9b111twVPVcYE0UI5LdkwImJBTWnW4BE1_pwhfLnA/exec";
-
     // Encapsular variáveis principais
     let questoes = [];
     let respostasInicial = [];
@@ -16,10 +13,8 @@
     let notaFinal = null;
     let userName = "";
 
-    // Defina screens no escopo do módulo
     let screens = null;
 
-    // Função para mostrar uma tela e esconder as outras
     function showScreen(screenId) {
         if (!screens) {
             screens = document.querySelectorAll('.screen');
@@ -31,14 +26,12 @@
                 screen.classList.remove('active');
             }
         });
-        // Mostrar botão de exportação apenas na tela de resultado final
         const exportBtn = document.getElementById('export-csv-btn');
         if (exportBtn) {
             exportBtn.style.display = (screenId === 'resultado-final-screen') ? 'inline-block' : 'none';
         }
     }
 
-    // Carregar questões do JSON
     document.addEventListener('DOMContentLoaded', () => {
         fetch('questoes_soc.json')
             .then(res => res.json())
@@ -50,7 +43,7 @@
                 setupEventListeners();
             })
             .catch(() => alert("Erro ao carregar questões."));
-        // Recuperar progresso salvo, se houver
+
         const progresso = localStorage.getItem('progressoAvaliacao');
         if (progresso) {
             const dadosProgresso = JSON.parse(progresso);
@@ -78,7 +71,6 @@
         }
 
         screens = document.querySelectorAll('.screen');
-        // Botão de exportação (só adiciona se não existir)
         if (!document.getElementById('export-csv-btn')) {
             const exportBtn = document.createElement('button');
             exportBtn.id = 'export-csv-btn';
@@ -86,14 +78,12 @@
             exportBtn.textContent = 'Exportar Resultado';
             exportBtn.style.display = 'none';
             exportBtn.addEventListener('click', exportarResultadoCSV);
-            // Adiciona na tela de resultado final, antes do botão "Fazer Nova Avaliação"
             const actionBtns = document.querySelector('#resultado-final-screen .action-buttons');
             if (actionBtns) actionBtns.insertBefore(exportBtn, actionBtns.firstChild);
         }
     });
 
     function setupEventListeners() {
-        // Module selection
         document.querySelectorAll('.module-card').forEach(card => {
             const moduleButton = card.querySelector('button');
             moduleButton.addEventListener('click', function() {
@@ -199,7 +189,6 @@
         updateNavigationButtons();
     }
 
-    // Cálculo da nota usando gabarito centralizado
     function calculateScore(respostas) {
         let score = 0;
         for (let i = 0; i < totalQuestions; i++) {
@@ -208,11 +197,9 @@
         return score;
     }
 
-    // Cálculo da eficácia (permitir negativo ou não)
     function calcularEficacia(notaInicial, notaFinal, total) {
         if (notaInicial === null || notaFinal === null) return 0;
         let eficacia = ((notaFinal - notaInicial) / (total - notaInicial)) * 100;
-        // Se quiser permitir negativo, remova o Math.max
         return Math.max(0, Math.round(eficacia));
     }
 
@@ -234,7 +221,6 @@
         updateProgress();
     }
 
-    // Persistência temporária no localStorage
     function salvarProgresso() {
         localStorage.setItem('progressoAvaliacao', JSON.stringify({
             currentQuestion,
@@ -266,7 +252,6 @@
         finishButton.disabled = !allAnswered;
     }
 
-    // Aviso antes de sair
     window.addEventListener('beforeunload', function(e) {
         if (currentQuestion > 0 && currentQuestion <= totalQuestions) {
             e.preventDefault();
@@ -292,48 +277,16 @@
         } else {
             notaFinal = calculateScore(respostasFinal);
             showScreen('resultado-final-screen');
-            document.getElementById('initial-final-score').textContent = `${notaInicial}/${totalQuestions}`;
-            document.getElementById('final-final-score').textContent = `${notaFinal}/${totalQuestions}`;
+            const initialFinalScore = document.getElementById('initial-final-score');
+            const finalFinalScore = document.getElementById('final-final-score');
+            const eficaciaPercentage = document.getElementById('eficacia-percentage');
+            if (initialFinalScore) initialFinalScore.textContent = `${notaInicial}/${totalQuestions}`;
+            if (finalFinalScore) finalFinalScore.textContent = `${notaFinal}/${totalQuestions}`;
             let eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
-            // Correção: sempre exibe eficácia numérica, mesmo 0% ou negativo
-            document.getElementById('eficacia-percentage').textContent = `Eficácia: ${eficacia}%`;
-            // Chamar função para enviar para a planilha
-            enviarResultadoParaPlanilha({
-                nome: userName,
-                notaInicial: notaInicial,
-                notaFinal: notaFinal,
-                eficacia: eficacia,
-                respostasInicial: respostasInicial.join(','),
-                respostasFinal: respostasFinal.join(',')
-            });
-            Object.freeze(respostasInicial);
-            Object.freeze(respostasFinal);
+            if (eficaciaPercentage) eficaciaPercentage.textContent = `${eficacia}%`;
         }
     }
 
-    // Envio dos dados finais via webhook (com validação e confirmação)
-    function enviarResultadoParaPlanilha(dados) {
-        if (!dados.nome || dados.notaInicial === null || dados.notaFinal === null) {
-            alert("Dados incompletos. O resultado não será enviado.");
-            return;
-        }
-        fetch(WEBHOOK_URL, {
-            method: 'POST',
-            body: JSON.stringify(dados),
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(response => {
-            if (response.ok) {
-                // Exibir confirmação na tela de resultado
-                document.getElementById('mensagem-envio').textContent = "Resultados salvos com sucesso!";
-            } else {
-                alert("Falha ao enviar resultados.");
-            }
-        })
-        .catch(() => alert("Erro ao enviar resultados."));
-    }
-
-    // Resetar aplicação e limpar campo de nome
     function resetApplication() {
         currentQuestion = 1;
         respostasInicial = Array(totalQuestions).fill(null);
@@ -346,16 +299,13 @@
         localStorage.removeItem('progressoAvaliacao');
     }
 
-    // (Opcional) Detectar DevTools aberto
     window.addEventListener('keydown', function(e) {
         if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
             alert("Modo desenvolvedor ativado. Jogue limpo!");
         }
     });
 
-    // Exportação de resultados em CSV
     function exportarResultadoCSV() {
-        // Cabeçalho
         const header = [
             'Nome',
             'Nota Inicial',
@@ -364,7 +314,6 @@
             'Respostas Inicial',
             'Respostas Final'
         ];
-        // Linha de dados
         const eficacia = calcularEficacia(notaInicial, notaFinal, totalQuestions);
         const row = [
             userName,
@@ -385,6 +334,4 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }
-
-    // ...restante do código...
 })();
