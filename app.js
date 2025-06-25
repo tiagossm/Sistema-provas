@@ -102,16 +102,29 @@
         });
     }
 
+    function shuffleArray(array) {
+        // Algoritmo Fisher-Yates
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
     function fetchModuleQuestions(mod) {
         return fetch(mod.jsonPath)
             .then(res => res.json())
             .then(data => {
                 if (data.gabarito && data.perguntas) {
-                    questoes = data.perguntas;
-                    gabarito = data.gabarito;
+                    // Cria array de índices para embaralhar perguntas e gabarito juntos
+                    const indices = Array.from({length: data.perguntas.length}, (_, i) => i);
+                    shuffleArray(indices);
+
+                    // Aplica embaralhamento nas perguntas e no gabarito
+                    questoes = indices.map(i => data.perguntas[i]);
+                    gabarito = indices.map(i => data.gabarito[i]);
                 } else {
-                    questoes = data;
                     // fallback para compatibilidade antiga
+                    questoes = data;
                 }
                 totalQuestions = questoes.length;
                 respostasInicial = Array(totalQuestions).fill(null);
