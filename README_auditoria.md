@@ -130,6 +130,30 @@ O sistema é robusto e funcional, mas pode evoluir muito em acessibilidade, expe
 
 ---
 
+### Configurações por Módulo
+
+Cada item do array `modulesConfig` pode definir opções de tentativas e tempo de espera entre elas:
+
+- `finalDelayHours`: quantidade de horas que o usuário deve aguardar para refazer o módulo (padrão `24`).
+- `maxAttempts`: número máximo de tentativas permitidas por CPF (padrão `3`).
+
+Exemplo:
+
+```js
+const modulesConfig = [
+  {
+    key: 'seguranca',
+    name: 'Módulo 1 - Segurança do Trabalho',
+    jsonPath: 'questoes_soc.json',
+    active: true,
+    finalDelayHours: 24,
+    maxAttempts: 3
+  }
+];
+```
+
+---
+
 ## Como criar a tabela de resultados no Supabase
 
 Você pode criar a tabela `resultados` diretamente pelo SQL do Supabase.  
