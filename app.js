@@ -68,6 +68,10 @@
     let screens = null;
     let isLoggedIn = false;
     let isAdmin = false;
+    let initialStartTime = null;
+    let finalStartTime = null;
+    let initialEndTime = null;
+    let finalEndTime = null;
 
     // CPF master liberado
     const MASTER_CPF = "36505921850";
@@ -196,6 +200,10 @@
                         notaInicial = dadosProgresso.notaInicial;
                         notaFinal = dadosProgresso.notaFinal;
                         userCPF = dadosProgresso.userCPF;
+                        initialStartTime = dadosProgresso.initialStartTime || null;
+                        finalStartTime = dadosProgresso.finalStartTime || null;
+                        initialEndTime = dadosProgresso.initialEndTime || null;
+                        finalEndTime = dadosProgresso.finalEndTime || null;
                         updateModuleTexts(currentModule);
                         if (avaliacaoAtual === 'inicial') {
                             showScreen('avaliacao-screen');
@@ -314,9 +322,15 @@
         document.getElementById('avaliacao-title').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
         document.getElementById('breadcrumb-avaliacao').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
         currentQuestion = 1;
+        if (type === 'inicial') {
+            if (!initialStartTime) initialStartTime = new Date().toISOString();
+        } else {
+            if (!finalStartTime) finalStartTime = new Date().toISOString();
+        }
         loadQuestion(currentQuestion);
         updateProgress();
         showScreen('avaliacao-screen');
+        salvarProgresso();
     }
 
     function loadQuestion(num) {
@@ -466,7 +480,11 @@
             avaliacaoAtual,
             notaInicial,
             notaFinal,
-            userCPF
+            userCPF,
+            initialStartTime,
+            finalStartTime,
+            initialEndTime,
+            finalEndTime
         }));
     }
 
@@ -514,10 +532,16 @@
             return;
         }
         if (avaliacaoAtual === 'inicial') {
+            if (!initialEndTime) initialEndTime = new Date().toISOString();
+        } else {
+            if (!finalEndTime) finalEndTime = new Date().toISOString();
+        }
+        if (avaliacaoAtual === 'inicial') {
             notaInicial = calculateScore(respostasInicial);
             showScreen('resultado-screen');
             document.getElementById('score-value').textContent = notaInicial;
             document.getElementById('score-percentage').textContent = `${Math.round((notaInicial / totalQuestions) * 100)}%`;
+            salvarProgresso();
         } else {
             notaFinal = calculateScore(respostasFinal);
             showScreen('resultado-final-screen');
@@ -559,6 +583,10 @@
                 nome: userNome,
                 cargo: userCargo,
                 unidade: userUnidade,
+                initialStartTime,
+                initialEndTime,
+                finalStartTime,
+                finalEndTime,
                 notaInicial,
                 notaFinal,
                 eficacia: calcularEficacia(notaInicial, notaFinal, totalQuestions),
@@ -566,6 +594,7 @@
                 respostasFinal: [...respostasFinal]
             });
             localStorage.setItem('historicoAvaliacao', JSON.stringify(historico));
+            salvarProgresso();
             renderReviewFinal();
         }
     }
@@ -693,6 +722,10 @@
         userCargo = "";
         userUnidade = "";
         avaliacaoAtual = "inicial";
+        initialStartTime = null;
+        finalStartTime = null;
+        initialEndTime = null;
+        finalEndTime = null;
         document.getElementById('user-cpf').value = "";
         document.getElementById('user-nome').value = "";
         document.getElementById('user-cargo').value = "";
