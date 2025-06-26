@@ -129,3 +129,56 @@ O sistema é robusto e funcional, mas pode evoluir muito em acessibilidade, expe
 5. Internacionalização e configurações avançadas.
 
 ---
+
+## Como criar a tabela de resultados no Supabase
+
+Você pode criar a tabela `resultados` diretamente pelo SQL do Supabase.  
+No painel do Supabase, acesse a aba **SQL Editor** e execute o seguinte comando:
+
+```sql
+create table resultados (
+  id bigint generated always as identity primary key,
+  data timestamptz not null,
+  modulo text,
+  moduloKey text,
+  cpf text,
+  nome text,
+  cargo text,
+  unidade text,
+  notaInicial integer,
+  notaFinal integer,
+  eficacia integer,
+  respostasInicial text[],
+  respostasFinal text[]
+);
+```
+
+- **Observações:**
+  - `respostasInicial` e `respostasFinal` são arrays de texto (ex: `['A','B','C',...]`).
+  - O campo `data` armazena a data/hora da avaliação.
+  - Você pode ajustar os tipos conforme sua necessidade.
+  - Para permitir inserção via API pública, vá em **Auth > Policies** e crie uma policy de `insert` e `select` para a tabela `resultados` (role: anon).
+
+## Como criar a tabela de usuários para login no Supabase
+
+No painel do Supabase, acesse o **SQL Editor** e execute:
+
+```sql
+create table usuarios (
+  id bigint generated always as identity primary key,
+  cpf text unique not null,
+  nome text not null,
+  senha text not null,
+  cargo text,
+  unidade text,
+  admin boolean default false
+);
+```
+
+- **Observações:**
+  - O campo `cpf` deve ser único.
+  - O campo `senha` deve ser armazenado como hash (para produção, use hash seguro no backend).
+  - O campo `admin` define se o usuário é administrador.
+  - Crie policies de `insert` e `select` para permitir cadastro e login via API pública (role: anon).
+
+---

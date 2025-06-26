@@ -66,6 +66,8 @@
     let userCargo = "";
     let userUnidade = "";
     let screens = null;
+    let isLoggedIn = false;
+    let isAdmin = false;
 
     // CPF master liberado
     const MASTER_CPF = "36505921850";
@@ -167,7 +169,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         buildModulesGrid();
         setupEventListeners();
-
         // Exibe botão de exportar histórico apenas para o CPF master
         let exportHistBtn = document.getElementById('export-history-btn');
         if (!exportHistBtn) {
@@ -727,5 +728,241 @@
         const hist = JSON.parse(localStorage.getItem('historicoAvaliacao') || "[]");
         return hist.filter(h => h.cpf === cpf && h.moduloKey === moduloKey).length;
     }
+
+    // Supabase config
+    const SUPABASE_URL = 'https://ejuwbfcspcfcltzqpnkk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqdXdiZmNzcGNmY2x0enFwbmtrIiwicm9zZSI6ImFub24iLCJpYXQiOjE3NTA4Nzc4NTIsImV4cCI6MjA2NjQ1Mzg1Mn0.eZZ_5X44IMHkhxlZAYEeathw9jmuBtkvMgmNyHOTOEc';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- LOGIN/CADASTRO USUÁRIO SUPABASE ---
+    async function cadastrarUsuarioSupabase({ cpf, nome, senha, cargo, unidade }) {
+        // Para produção, use hash de senha no backend!
+        const { data, error } = await supabase
+            .from('usuarios')
+            .insert([{ cpf, nome, senha, cargo, unidade }]);
+        if (error) return { error };
+        return { data };
+    }
+
+    async function autenticarUsuarioSupabase({ cpf, senha }) {
+        // Para produção, compare hash!
+        const { data, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('cpf', cpf)
+            .eq('senha', senha)
+            .single();
+        if (error) return { error };
+        return { data };
+    }
+
+    // --- TELA DE LOGIN/CADASTRO/RECUPERAÇÃO ---
+    function showLoginScreen() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        let loginDiv = document.getElementById('login-screen');
+        if (!loginDiv) {
+            loginDiv = document.createElement('div');
+            loginDiv.id = 'login-screen';
+            loginDiv.className = 'screen active';
+            document.body.prepend(loginDiv);
+        }
+        loginDiv.innerHTML = `
+            <div class="container" style="max-width:400px;margin:48px auto;">
+                <h2 style="text-align:center;">Entrar no Sistema</h2>
+                <div class="form-group">
+                    <label for="login-cpf" class="form-label">CPF <span style="color:red">*</span></label>
+                    <input type="text" id="login-cpf" class="form-control" placeholder="Apenas números, 11 dígitos" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-senha" class="form-label">Senha <span style="color:red">*</span></label>
+                    <input type="password" id="login-senha" class="form-control" placeholder="Senha" required>
+                </div>
+                <div class="action-buttons" style="justify-content:center;">
+                    <button id="login-btn" class="btn btn--primary">Entrar</button>
+                    <button id="show-cadastro-btn" class="btn btn--outline">Cadastrar</button>
+                </div>
+                <div style="text-align:center;margin-top:10px;">
+                    <a href="#" id="show-recuperar-btn" style="font-size:13px;">Esqueci minha senha</a>
+                </div>
+                <div id="login-error" style="color:red;text-align:center;margin-top:10px;"></div>
+            </div>
+        `;
+        document.getElementById('login-btn').onclick = handleLogin;
+        document.getElementById('show-cadastro-btn').onclick = showCadastroScreen;
+        document.getElementById('show-recuperar-btn').onclick = showRecuperarSenhaScreen;
+    }
+
+    function showCadastroScreen() {
+        let loginDiv = document.getElementById('login-screen');
+        loginDiv.innerHTML = `
+            <div class="container" style="max-width:400px;margin:48px auto;">
+                <h2 style="text-align:center;">Cadastro de Usuário</h2>
+                <div class="form-group">
+                    <label for="cadastro-cpf" class="form-label">CPF <span style="color:red">*</span></label>
+                    <input type="text" id="cadastro-cpf" class="form-control" placeholder="Apenas números, 11 dígitos" required>
+                </div>
+                <div class="form-group">
+                    <label for="cadastro-nome" class="form-label">Nome completo <span style="color:red">*</span></label>
+                    <input type="text" id="cadastro-nome" class="form-control" placeholder="Digite seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="cadastro-senha" class="form-label">Senha <span style="color:red">*</span></label>
+                    <input type="password" id="cadastro-senha" class="form-control" placeholder="Senha" required>
+                </div>
+                <div class="form-group">
+                    <label for="cadastro-cargo" class="form-label">Cargo</label>
+                    <input type="text" id="cadastro-cargo" class="form-control" placeholder="Seu cargo">
+                </div>
+                <div class="form-group">
+                    <label for="cadastro-unidade" class="form-label">Unidade</label>
+                    <input type="text" id="cadastro-unidade" class="form-control" placeholder="Sua unidade">
+                </div>
+                <div class="action-buttons" style="justify-content:center;">
+                    <button id="cadastrar-btn" class="btn btn--primary">Cadastrar</button>
+                    <button id="voltar-login-btn" class="btn btn--outline">Voltar</button>
+                </div>
+                <div id="cadastro-error" style="color:red;text-align:center;margin-top:10px;"></div>
+            </div>
+        `;
+        document.getElementById('cadastrar-btn').onclick = handleCadastro;
+        document.getElementById('voltar-login-btn').onclick = showLoginScreen;
+    }
+
+    function showRecuperarSenhaScreen() {
+        let loginDiv = document.getElementById('login-screen');
+        loginDiv.innerHTML = `
+            <div class="container" style="max-width:400px;margin:48px auto;">
+                <h2 style="text-align:center;">Recuperar Senha</h2>
+                <div class="form-group">
+                    <label for="recuperar-cpf" class="form-label">CPF <span style="color:red">*</span></label>
+                    <input type="text" id="recuperar-cpf" class="form-control" placeholder="Apenas números, 11 dígitos" required>
+                </div>
+                <div class="form-group">
+                    <label for="recuperar-nome" class="form-label">Nome completo <span style="color:red">*</span></label>
+                    <input type="text" id="recuperar-nome" class="form-control" placeholder="Digite seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label for="recuperar-nova-senha" class="form-label">Nova senha <span style="color:red">*</span></label>
+                    <input type="password" id="recuperar-nova-senha" class="form-control" placeholder="Nova senha" required>
+                </div>
+                <div class="action-buttons" style="justify-content:center;">
+                    <button id="recuperar-btn" class="btn btn--primary">Alterar Senha</button>
+                    <button id="voltar-login-btn" class="btn btn--outline">Voltar</button>
+                </div>
+                <div id="recuperar-error" style="color:red;text-align:center;margin-top:10px;"></div>
+            </div>
+        `;
+        document.getElementById('recuperar-btn').onclick = handleRecuperarSenha;
+        document.getElementById('voltar-login-btn').onclick = showLoginScreen;
+    }
+
+    async function handleRecuperarSenha() {
+        const cpf = document.getElementById('recuperar-cpf').value.trim();
+        const nome = document.getElementById('recuperar-nome').value.trim();
+        const novaSenha = document.getElementById('recuperar-nova-senha').value.trim();
+        const errorDiv = document.getElementById('recuperar-error');
+        if (!cpf || !/^\d{11}$/.test(cpf)) {
+            errorDiv.textContent = "Digite um CPF válido (apenas números, 11 dígitos).";
+            return;
+        }
+        if (!nome) {
+            errorDiv.textContent = "Digite seu nome completo.";
+            return;
+        }
+        if (!novaSenha) {
+            errorDiv.textContent = "Digite a nova senha.";
+            return;
+        }
+        // Busca usuário
+        const { data, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('cpf', cpf)
+            .eq('nome', nome)
+            .single();
+        if (error || !data) {
+            errorDiv.textContent = "Usuário não encontrado. Verifique CPF e nome.";
+            return;
+        }
+        // Atualiza senha
+        const { error: updateError } = await supabase
+            .from('usuarios')
+            .update({ senha: novaSenha })
+            .eq('cpf', cpf);
+        if (updateError) {
+            errorDiv.textContent = "Erro ao atualizar senha.";
+            return;
+        }
+        errorDiv.style.color = "green";
+        errorDiv.textContent = "Senha alterada com sucesso! Faça login.";
+        setTimeout(showLoginScreen, 1200);
+    }
+
+    async function handleCadastro() {
+        const cpf = document.getElementById('cadastro-cpf').value.trim();
+        const nome = document.getElementById('cadastro-nome').value.trim();
+        const senha = document.getElementById('cadastro-senha').value.trim();
+        const cargo = document.getElementById('cadastro-cargo').value.trim();
+        const unidade = document.getElementById('cadastro-unidade').value.trim();
+        const errorDiv = document.getElementById('cadastro-error');
+        if (!cpf || !/^\d{11}$/.test(cpf)) {
+            errorDiv.textContent = "Digite um CPF válido (apenas números, 11 dígitos).";
+            return;
+        }
+        if (!nome) {
+            errorDiv.textContent = "Digite seu nome completo.";
+            return;
+        }
+        if (!senha) {
+            errorDiv.textContent = "Digite uma senha.";
+            return;
+        }
+        // Tenta cadastrar no Supabase
+        const { error } = await cadastrarUsuarioSupabase({ cpf, nome, senha, cargo, unidade });
+        if (error) {
+            errorDiv.textContent = "Erro ao cadastrar: " + (error.message || "CPF já cadastrado.");
+            return;
+        }
+        errorDiv.style.color = "green";
+        errorDiv.textContent = "Cadastro realizado com sucesso! Faça login.";
+        setTimeout(showLoginScreen, 1200);
+    }
+
+    async function handleLogin() {
+        const cpf = document.getElementById('login-cpf').value.trim();
+        const senha = document.getElementById('login-senha').value.trim();
+        const errorDiv = document.getElementById('login-error');
+        if (!cpf || !/^\d{11}$/.test(cpf)) {
+            errorDiv.textContent = "Digite um CPF válido (apenas números, 11 dígitos).";
+            return;
+        }
+        if (!senha) {
+            errorDiv.textContent = "Digite sua senha.";
+            return;
+        }
+        // Autentica no Supabase
+        const { data, error } = await autenticarUsuarioSupabase({ cpf, senha });
+        if (error || !data) {
+            errorDiv.textContent = "CPF ou senha inválidos.";
+            return;
+        }
+        userCPF = data.cpf;
+        userNome = data.nome;
+        userCargo = data.cargo || "";
+        userUnidade = data.unidade || "";
+        isLoggedIn = true;
+        isAdmin = !!data.admin || (userCPF === MASTER_CPF);
+        errorDiv.textContent = "";
+        document.getElementById('login-screen').classList.remove('active');
+        showScreen('home-screen');
+        // Exibe dashboard e botões avançados só para admin
+        let dashDiv = document.getElementById('dashboard-supabase');
+        if (dashDiv) dashDiv.style.display = isAdmin ? '' : 'none';
+        let exportSupabaseBtn = document.getElementById('export-supabase-btn');
+        if (exportSupabaseBtn) exportSupabaseBtn.style.display = isAdmin ? '' : 'none';
+    }
+
+    // Chame showLoginScreen por último para garantir que a tela de login fique ativa
+    setTimeout(showLoginScreen, 0);
 })();
 
