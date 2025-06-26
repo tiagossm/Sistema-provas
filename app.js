@@ -83,6 +83,10 @@
         if (exportHistBtn) {
             exportHistBtn.style.display = (screenId === 'home-screen' && userCPF === MASTER_CPF) ? 'inline-block' : 'none';
         }
+        const uploadDiv = document.getElementById('upload-container');
+        if (uploadDiv) {
+            uploadDiv.style.display = (screenId === 'module-intro-screen' && isAdmin) ? '' : 'none';
+        }
     }
 
     function buildModulesGrid() {
@@ -112,26 +116,68 @@
         }
     }
 
+    function saveUploadedQuestions(modKey, data) {
+        localStorage.setItem('questions_' + modKey, JSON.stringify(data));
+    }
+
+    function getUploadedQuestions(modKey) {
+        const stored = localStorage.getItem('questions_' + modKey);
+        if (!stored) return null;
+        try { return JSON.parse(stored); } catch (e) { return null; }
+    }
+
+    function validateQuestionData(data) {
+        if (!data || !Array.isArray(data.perguntas) || !Array.isArray(data.gabarito)) return false;
+        if (data.perguntas.length !== data.gabarito.length || !data.perguntas.length) return false;
+        return data.perguntas.every(q => q && q.pergunta && Array.isArray(q.alternativas));
+    }
+
+    function processQuestionData(data) {
+        if (!validateQuestionData(data)) throw new Error('invalid');
+        const indices = Array.from({ length: data.perguntas.length }, (_, i) => i);
+        shuffleArray(indices);
+        questoes = indices.map(i => data.perguntas[i]);
+        gabarito = indices.map(i => data.gabarito[i]);
+        totalQuestions = questoes.length;
+        respostasInicial = Array(totalQuestions).fill(null);
+        respostasFinal = Array(totalQuestions).fill(null);
+    }
+
+    function handleQuestionUpload(e) {
+        const file = e.target.files[0];
+        if (!file || !currentModule) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!validateQuestionData(data)) throw new Error();
+                saveUploadedQuestions(currentModule.key, data);
+                processQuestionData(data);
+                const feed = document.getElementById('upload-feedback');
+                if (feed) feed.textContent = 'Arquivo carregado!';
+            } catch (err) {
+                showInlineError('JSON inválido');
+                const feed = document.getElementById('upload-feedback');
+                if (feed) feed.textContent = '';
+            }
+        };
+        reader.readAsText(file);
+    }
+
     function fetchModuleQuestions(mod) {
+        const uploaded = getUploadedQuestions(mod.key);
+        if (uploaded) {
+            try {
+                processQuestionData(uploaded);
+                return Promise.resolve();
+            } catch (e) {
+                localStorage.removeItem('questions_' + mod.key);
+                showInlineError('Arquivo de questões inválido, usando padrão.');
+            }
+        }
         return fetch(mod.jsonPath)
             .then(res => res.json())
-            .then(data => {
-                if (data.gabarito && data.perguntas) {
-                    // Cria array de índices para embaralhar perguntas e gabarito juntos
-                    const indices = Array.from({length: data.perguntas.length}, (_, i) => i);
-                    shuffleArray(indices);
-
-                    // Aplica embaralhamento nas perguntas e no gabarito
-                    questoes = indices.map(i => data.perguntas[i]);
-                    gabarito = indices.map(i => data.gabarito[i]);
-                } else {
-                    // fallback para compatibilidade antiga
-                    questoes = data;
-                }
-                totalQuestions = questoes.length;
-                respostasInicial = Array(totalQuestions).fill(null);
-                respostasFinal = Array(totalQuestions).fill(null);
-            })
+            .then(data => { processQuestionData(data); })
             .catch(() => showInlineError(t('errorLoad')));
     }
 
@@ -229,6 +275,12 @@
         exportBtn.replaceWith(exportBtn.cloneNode(true));
         exportBtn = document.getElementById('export-csv-btn');
         exportBtn.addEventListener('click', exportarResultadoCSV);
+
+        const fileInput = document.getElementById('question-file-input');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.addEventListener('change', handleQuestionUpload);
+        }
     });
 
     function setupEventListeners() {

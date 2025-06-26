@@ -59,7 +59,13 @@
                         <label for="user-unidade" class="form-label">Unidade</label>
                         <input type="text" id="user-unidade" class="form-control" placeholder="Sua unidade">
                     </div>
-                    
+
+                    <div class="form-group" id="upload-container" style="display:none;">
+                        <label for="question-file-input" class="form-label">Importar Questões (JSON)</label>
+                        <input type="file" id="question-file-input" accept=".json">
+                        <div id="upload-feedback" style="color:green;margin-top:5px;"></div>
+                    </div>
+
                     <div class="action-buttons">
                         <button id="start-initial-btn" class="btn btn--primary">Iniciar Avaliação Inicial</button>
                         <button class="btn btn--outline back-to-home">Voltar ao Menu Principal</button>
