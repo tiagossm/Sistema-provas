@@ -31,7 +31,9 @@
             description: 'Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)',
             jsonPath: 'questoes_soc.json',
             icon: '🛡️',
-            active: true
+            active: true,
+            finalDelayHours: 24,
+            maxAttempts: 3
         },
         {
             key: 'saude',
@@ -39,7 +41,9 @@
             description: 'Avaliação de programas de saúde ocupacional e medicina do trabalho',
             jsonPath: 'questoes_saude.json',
             icon: '🏥',
-            active: false
+            active: false,
+            finalDelayHours: 24,
+            maxAttempts: 3
         },
         {
             key: 'financeiro',
@@ -47,7 +51,9 @@
             description: 'Gestão financeira e análise de custos em segurança do trabalho',
             jsonPath: 'questoes_financeiro.json',
             icon: '💰',
-            active: false
+            active: false,
+            finalDelayHours: 24,
+            maxAttempts: 3
         }
     ];
 
@@ -325,12 +331,22 @@
                 alert("Por favor, digite um CPF válido (apenas números, 11 dígitos).");
                 return;
             }
-            // Limite de tentativas por CPF, exceto para master
+            // Limite de tentativas por CPF e intervalo mínimo entre elas
             if (userCPF !== MASTER_CPF) {
-                const tentativas = getTentativasCPF(userCPF, currentModule ? currentModule.key : "");
-                if (tentativas >= 3) {
-                    alert("Limite de 3 tentativas atingido para este CPF neste módulo.");
+                const { count: tentativas, lastDate } = getTentativasCPF(userCPF, currentModule ? currentModule.key : "");
+                const maxAttempts = currentModule && currentModule.maxAttempts ? currentModule.maxAttempts : 3;
+                const delayHours = currentModule && currentModule.finalDelayHours ? currentModule.finalDelayHours : 24;
+                if (tentativas >= maxAttempts) {
+                    alert(`Limite de ${maxAttempts} tentativas atingido para este CPF neste módulo.`);
                     return;
+                }
+                if (lastDate) {
+                    const diffHours = (Date.now() - lastDate.getTime()) / 36e5;
+                    if (diffHours < delayHours) {
+                        const restante = Math.ceil(delayHours - diffHours);
+                        alert(`É necessário aguardar ${delayHours} horas entre tentativas. Tente novamente em aproximadamente ${restante} hora(s).`);
+                        return;
+                    }
                 }
             }
             avaliacaoAtual = 'inicial';
@@ -811,7 +827,12 @@
 
     function getTentativasCPF(cpf, moduloKey) {
         const hist = JSON.parse(localStorage.getItem('historicoAvaliacao') || "[]");
-        return hist.filter(h => h.cpf === cpf && h.moduloKey === moduloKey).length;
+        const registros = hist.filter(h => h.cpf === cpf && h.moduloKey === moduloKey);
+        const last = registros[registros.length - 1];
+        return {
+            count: registros.length,
+            lastDate: last ? new Date(last.data) : null
+        };
     }
 
     // Supabase config
