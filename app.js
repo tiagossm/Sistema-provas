@@ -297,6 +297,19 @@
         });
 
         document.getElementById('start-final-btn').addEventListener('click', function() {
+            const key = `initialCompleted_${userCPF}_${currentModule ? currentModule.key : ''}`;
+            const ts = parseInt(localStorage.getItem(key), 10);
+            const now = Date.now();
+            const diff = ts ? (now - ts) : null;
+            if (ts && diff < 24 * 60 * 60 * 1000) {
+                if (isAdmin || userCPF === MASTER_CPF) {
+                    const confirmBypass = confirm('Menos de 24 horas desde a avaliação inicial. Iniciar mesmo assim?');
+                    if (!confirmBypass) return;
+                } else {
+                    alert('É necessário aguardar 24 horas entre a avaliação inicial e a final.');
+                    return;
+                }
+            }
             avaliacaoAtual = 'final';
             currentQuestion = 1;
             respostasFinal = Array(totalQuestions).fill(null);
@@ -515,6 +528,8 @@
         }
         if (avaliacaoAtual === 'inicial') {
             notaInicial = calculateScore(respostasInicial);
+            const key = `initialCompleted_${userCPF}_${currentModule ? currentModule.key : ''}`;
+            localStorage.setItem(key, Date.now().toString());
             showScreen('resultado-screen');
             document.getElementById('score-value').textContent = notaInicial;
             document.getElementById('score-percentage').textContent = `${Math.round((notaInicial / totalQuestions) * 100)}%`;
