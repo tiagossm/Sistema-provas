@@ -962,7 +962,7 @@
         if (exportSupabaseBtn) exportSupabaseBtn.style.display = isAdmin ? '' : 'none';
     }
 
-    // Chame showLoginScreen por último para garantir que a tela de login fique ativa
-    setTimeout(showLoginScreen, 0);
+    // Chame showLoginScreen por último, garantindo que o DOM esteja pronto
+    showLoginScreen();
 })();
 
