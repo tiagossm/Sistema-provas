@@ -31,7 +31,9 @@
             description: 'Sistema de avaliação de eficácia em Segurança Ocupacional e Saúde (SOC)',
             jsonPath: 'questoes_soc.json',
             icon: '🛡️',
-            active: true
+            active: true,
+            finalDelayHours: 24,
+            maxAttempts: 3
         },
         {
             key: 'saude',
@@ -39,7 +41,9 @@
             description: 'Avaliação de programas de saúde ocupacional e medicina do trabalho',
             jsonPath: 'questoes_saude.json',
             icon: '🏥',
-            active: false
+            active: false,
+            finalDelayHours: 24,
+            maxAttempts: 3
         },
         {
             key: 'financeiro',
@@ -47,7 +51,9 @@
             description: 'Gestão financeira e análise de custos em segurança do trabalho',
             jsonPath: 'questoes_financeiro.json',
             icon: '💰',
-            active: false
+            active: false,
+            finalDelayHours: 24,
+            maxAttempts: 3
         }
     ];
 
@@ -68,6 +74,10 @@
     let screens = null;
     let isLoggedIn = false;
     let isAdmin = false;
+    let initialStartTime = null;
+    let finalStartTime = null;
+    let initialEndTime = null;
+    let finalEndTime = null;
 
     // CPF master liberado
     const MASTER_CPF = "36505921850";
@@ -82,6 +92,10 @@
         const exportHistBtn = document.getElementById('export-history-btn');
         if (exportHistBtn) {
             exportHistBtn.style.display = (screenId === 'home-screen' && userCPF === MASTER_CPF) ? 'inline-block' : 'none';
+        }
+        const uploadDiv = document.getElementById('upload-container');
+        if (uploadDiv) {
+            uploadDiv.style.display = (screenId === 'module-intro-screen' && isAdmin) ? '' : 'none';
         }
     }
 
@@ -112,26 +126,68 @@
         }
     }
 
+    function saveUploadedQuestions(modKey, data) {
+        localStorage.setItem('questions_' + modKey, JSON.stringify(data));
+    }
+
+    function getUploadedQuestions(modKey) {
+        const stored = localStorage.getItem('questions_' + modKey);
+        if (!stored) return null;
+        try { return JSON.parse(stored); } catch (e) { return null; }
+    }
+
+    function validateQuestionData(data) {
+        if (!data || !Array.isArray(data.perguntas) || !Array.isArray(data.gabarito)) return false;
+        if (data.perguntas.length !== data.gabarito.length || !data.perguntas.length) return false;
+        return data.perguntas.every(q => q && q.pergunta && Array.isArray(q.alternativas));
+    }
+
+    function processQuestionData(data) {
+        if (!validateQuestionData(data)) throw new Error('invalid');
+        const indices = Array.from({ length: data.perguntas.length }, (_, i) => i);
+        shuffleArray(indices);
+        questoes = indices.map(i => data.perguntas[i]);
+        gabarito = indices.map(i => data.gabarito[i]);
+        totalQuestions = questoes.length;
+        respostasInicial = Array(totalQuestions).fill(null);
+        respostasFinal = Array(totalQuestions).fill(null);
+    }
+
+    function handleQuestionUpload(e) {
+        const file = e.target.files[0];
+        if (!file || !currentModule) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!validateQuestionData(data)) throw new Error();
+                saveUploadedQuestions(currentModule.key, data);
+                processQuestionData(data);
+                const feed = document.getElementById('upload-feedback');
+                if (feed) feed.textContent = 'Arquivo carregado!';
+            } catch (err) {
+                showInlineError('JSON inválido');
+                const feed = document.getElementById('upload-feedback');
+                if (feed) feed.textContent = '';
+            }
+        };
+        reader.readAsText(file);
+    }
+
     function fetchModuleQuestions(mod) {
+        const uploaded = getUploadedQuestions(mod.key);
+        if (uploaded) {
+            try {
+                processQuestionData(uploaded);
+                return Promise.resolve();
+            } catch (e) {
+                localStorage.removeItem('questions_' + mod.key);
+                showInlineError('Arquivo de questões inválido, usando padrão.');
+            }
+        }
         return fetch(mod.jsonPath)
             .then(res => res.json())
-            .then(data => {
-                if (data.gabarito && data.perguntas) {
-                    // Cria array de índices para embaralhar perguntas e gabarito juntos
-                    const indices = Array.from({length: data.perguntas.length}, (_, i) => i);
-                    shuffleArray(indices);
-
-                    // Aplica embaralhamento nas perguntas e no gabarito
-                    questoes = indices.map(i => data.perguntas[i]);
-                    gabarito = indices.map(i => data.gabarito[i]);
-                } else {
-                    // fallback para compatibilidade antiga
-                    questoes = data;
-                }
-                totalQuestions = questoes.length;
-                respostasInicial = Array(totalQuestions).fill(null);
-                respostasFinal = Array(totalQuestions).fill(null);
-            })
+            .then(data => { processQuestionData(data); })
             .catch(() => showInlineError(t('errorLoad')));
     }
 
@@ -196,6 +252,10 @@
                         notaInicial = dadosProgresso.notaInicial;
                         notaFinal = dadosProgresso.notaFinal;
                         userCPF = dadosProgresso.userCPF;
+                        initialStartTime = dadosProgresso.initialStartTime || null;
+                        finalStartTime = dadosProgresso.finalStartTime || null;
+                        initialEndTime = dadosProgresso.initialEndTime || null;
+                        finalEndTime = dadosProgresso.finalEndTime || null;
                         updateModuleTexts(currentModule);
                         if (avaliacaoAtual === 'inicial') {
                             showScreen('avaliacao-screen');
@@ -229,6 +289,12 @@
         exportBtn.replaceWith(exportBtn.cloneNode(true));
         exportBtn = document.getElementById('export-csv-btn');
         exportBtn.addEventListener('click', exportarResultadoCSV);
+
+        const fileInput = document.getElementById('question-file-input');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.addEventListener('change', handleQuestionUpload);
+        }
     });
 
     function setupEventListeners() {
@@ -265,12 +331,22 @@
                 alert("Por favor, digite um CPF válido (apenas números, 11 dígitos).");
                 return;
             }
-            // Limite de tentativas por CPF, exceto para master
+            // Limite de tentativas por CPF e intervalo mínimo entre elas
             if (userCPF !== MASTER_CPF) {
-                const tentativas = getTentativasCPF(userCPF, currentModule ? currentModule.key : "");
-                if (tentativas >= 3) {
-                    alert("Limite de 3 tentativas atingido para este CPF neste módulo.");
+                const { count: tentativas, lastDate } = getTentativasCPF(userCPF, currentModule ? currentModule.key : "");
+                const maxAttempts = currentModule && currentModule.maxAttempts ? currentModule.maxAttempts : 3;
+                const delayHours = currentModule && currentModule.finalDelayHours ? currentModule.finalDelayHours : 24;
+                if (tentativas >= maxAttempts) {
+                    alert(`Limite de ${maxAttempts} tentativas atingido para este CPF neste módulo.`);
                     return;
+                }
+                if (lastDate) {
+                    const diffHours = (Date.now() - lastDate.getTime()) / 36e5;
+                    if (diffHours < delayHours) {
+                        const restante = Math.ceil(delayHours - diffHours);
+                        alert(`É necessário aguardar ${delayHours} horas entre tentativas. Tente novamente em aproximadamente ${restante} hora(s).`);
+                        return;
+                    }
                 }
             }
             avaliacaoAtual = 'inicial';
@@ -297,6 +373,19 @@
         });
 
         document.getElementById('start-final-btn').addEventListener('click', function() {
+            const key = `initialCompleted_${userCPF}_${currentModule ? currentModule.key : ''}`;
+            const ts = parseInt(localStorage.getItem(key), 10);
+            const now = Date.now();
+            const diff = ts ? (now - ts) : null;
+            if (ts && diff < 24 * 60 * 60 * 1000) {
+                if (isAdmin || userCPF === MASTER_CPF) {
+                    const confirmBypass = confirm('Menos de 24 horas desde a avaliação inicial. Iniciar mesmo assim?');
+                    if (!confirmBypass) return;
+                } else {
+                    alert('É necessário aguardar 24 horas entre a avaliação inicial e a final.');
+                    return;
+                }
+            }
             avaliacaoAtual = 'final';
             currentQuestion = 1;
             respostasFinal = Array(totalQuestions).fill(null);
@@ -314,9 +403,15 @@
         document.getElementById('avaliacao-title').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
         document.getElementById('breadcrumb-avaliacao').textContent = type === 'inicial' ? 'Avaliação Inicial' : 'Avaliação Final';
         currentQuestion = 1;
+        if (type === 'inicial') {
+            if (!initialStartTime) initialStartTime = new Date().toISOString();
+        } else {
+            if (!finalStartTime) finalStartTime = new Date().toISOString();
+        }
         loadQuestion(currentQuestion);
         updateProgress();
         showScreen('avaliacao-screen');
+        salvarProgresso();
     }
 
     function loadQuestion(num) {
@@ -466,7 +561,11 @@
             avaliacaoAtual,
             notaInicial,
             notaFinal,
-            userCPF
+            userCPF,
+            initialStartTime,
+            finalStartTime,
+            initialEndTime,
+            finalEndTime
         }));
     }
 
@@ -514,10 +613,18 @@
             return;
         }
         if (avaliacaoAtual === 'inicial') {
+            if (!initialEndTime) initialEndTime = new Date().toISOString();
+        } else {
+            if (!finalEndTime) finalEndTime = new Date().toISOString();
+        }
+        if (avaliacaoAtual === 'inicial') {
             notaInicial = calculateScore(respostasInicial);
+            const key = `initialCompleted_${userCPF}_${currentModule ? currentModule.key : ''}`;
+            localStorage.setItem(key, Date.now().toString());
             showScreen('resultado-screen');
             document.getElementById('score-value').textContent = notaInicial;
             document.getElementById('score-percentage').textContent = `${Math.round((notaInicial / totalQuestions) * 100)}%`;
+            salvarProgresso();
         } else {
             notaFinal = calculateScore(respostasFinal);
             showScreen('resultado-final-screen');
@@ -559,6 +666,10 @@
                 nome: userNome,
                 cargo: userCargo,
                 unidade: userUnidade,
+                initialStartTime,
+                initialEndTime,
+                finalStartTime,
+                finalEndTime,
                 notaInicial,
                 notaFinal,
                 eficacia: calcularEficacia(notaInicial, notaFinal, totalQuestions),
@@ -566,6 +677,7 @@
                 respostasFinal: [...respostasFinal]
             });
             localStorage.setItem('historicoAvaliacao', JSON.stringify(historico));
+            salvarProgresso();
             renderReviewFinal();
         }
     }
@@ -693,6 +805,10 @@
         userCargo = "";
         userUnidade = "";
         avaliacaoAtual = "inicial";
+        initialStartTime = null;
+        finalStartTime = null;
+        initialEndTime = null;
+        finalEndTime = null;
         document.getElementById('user-cpf').value = "";
         document.getElementById('user-nome').value = "";
         document.getElementById('user-cargo').value = "";
@@ -726,7 +842,12 @@
 
     function getTentativasCPF(cpf, moduloKey) {
         const hist = JSON.parse(localStorage.getItem('historicoAvaliacao') || "[]");
-        return hist.filter(h => h.cpf === cpf && h.moduloKey === moduloKey).length;
+        const registros = hist.filter(h => h.cpf === cpf && h.moduloKey === moduloKey);
+        const last = registros[registros.length - 1];
+        return {
+            count: registros.length,
+            lastDate: last ? new Date(last.data) : null
+        };
     }
 
     // Supabase config
